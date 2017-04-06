@@ -1,0 +1,42 @@
+
+body {
+    background-image: url("../media/brownTealTrellis.jpg");
+    background-repeat: repeat;
+    
+}
+
+.wrapper {
+	background: #effff8;
+	border-radius: 25px;
+	padding: 25px;
+	margin: 35px;
+	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.6), 0 6px 20px 0 rgba(0, 0, 0, 0.6);
+  //min-height: 100%;
+  display: flex;
+  align-items: stretch;
+}
+
+#mainDiv {
+}
+
+html, body, #hundred {
+  height: 100%;
+  display: flex;
+}
+
+.radarChart {
+	font-family: 'Open Sans', sans-serif;
+	font-size: 11px;
+	font-weight: 300;
+	text-align: center;
+	text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, -1px 0 0 #fff, 0 -1px 0 #fff;
+	cursor: default;
+}
+
+fieldset {
+	font-family: 'Open Sans', sans-serif;
+	font-size: 14px;
+	font-weight: 300;
+	
+	overflow-y: auto;
+}
