@@ -59,10 +59,11 @@ html, body, #hundred {
   display: flex;
 }
 
-#svg_canvas{
+#canvas{
 	border-style:dashed;
 	border-width:1px;
 	border-color:red;
+	flex: 1 1 auto;
 }
 
 div {

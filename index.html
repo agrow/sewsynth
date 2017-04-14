@@ -12,19 +12,22 @@
 		<!-- Need the jqueries & ui for my making checkboxes and stuff on the fly -->
 		<script type="text/javascript" src="js/libs/jquery-3.0.0.min.js"></script>
 		<script type="text/javascript" src="js/libs/jquery-ui.js"></script>
+		<script type="text/javascript" src="js/libs/fabric.js"></script>
 	</head>
 	<body>
 		<div class="fill-area" id="hundred">
 
 			<div class="wrapper flex_grow fill-area" id="mainDiv">
 				<div class="flex_grow fill-area" id="svg_div ">
-					<svg class="flex_grow fill-area" id="svg_canvas">
+					<canvas id="canvas">
 						
-					</svg>
+					</canvas>
 				</div>
 			</div>
 		</div>
 
+		<script src="js/canvasHandler.js"></script>
 		<script src="js/main.js"></script>
+		
 	</body>
 </html>
