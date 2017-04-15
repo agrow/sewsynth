@@ -12,7 +12,7 @@ var saveCalculatedDimensions = function(){
 
 var initCanvas = function(){
 	saveCalculatedDimensions(); // Needed to initialize new canvas at an actual decent size...
-	global.mainCanvasHandler = new canvasHandler("svg_canvas");
+	global.mainCanvasHandler = new canvasHandler("canvas");
 };
 ///////////////////////////////////////////////////////
 /////////////// EVENT-BASED FUNCTIONS ////////////////
