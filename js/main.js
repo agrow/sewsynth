@@ -10,29 +10,22 @@ var saveCalculatedDimensions = function(){
 	console.log("calculating height & width... " + global.calcHeight + ", " + global.calcWidth);
 };
 
-// Handled by flex, but we may need to override that if it doesn't work with our drawing functions...
-var resizeCanvasEvent = function(){
-	//console.log($(document).width());
-	//$("#svg_canvas").width($(document).width() - 160);
-	//$("#svg_canvas").height($(document).height() - 140);
-};
-
-var setGUIFunctions = function(){
-	// Put button/UI functions here, to be loaded when document is ready!
-};
-
 var initCanvas = function(){
 	saveCalculatedDimensions(); // Needed to initialize new canvas at an actual decent size...
-	global.mainCanvasHandler = new canvasHandler("canvas");
+	global.mainCanvasHandler = new canvasHandler("svg_canvas");
 };
 ///////////////////////////////////////////////////////
 /////////////// EVENT-BASED FUNCTIONS ////////////////
 ///////////////////////////////////////////////////////
+
+// Handled by flex, but we may need to override that if it doesn't work with our drawing functions...
+
 window.addEventListener("resize", function(){
 	saveCalculatedDimensions();
-	if(global.mainCanvasHandler !== null){
-		global.mainCanvasHandler.setCanvasDimensions(global.calcWidth, global.calcHeight);
-	}
+	
+	//if(global.mainCanvasHandler !== null){
+	//	global.mainCanvasHandler.setCanvasDimensions(global.calcWidth, global.calcHeight);
+	//}
 });
 
 $( document ).ready(function() {
