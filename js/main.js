@@ -1,7 +1,11 @@
 var global = {
 	mainCanvasHandler: null,
+	mainDesignHandler: null,
 	calcHeight: 0,
-	calcWidth: 0
+	calcWidth: 0,
+	scale: 1, // May be modified to change zoom/scale of drawing designs
+	designCount: 0,
+	pointCount: 0,
 };
 
 var saveCalculatedDimensions = function(){
@@ -12,7 +16,8 @@ var saveCalculatedDimensions = function(){
 
 var initCanvas = function(){
 	saveCalculatedDimensions(); // Needed to initialize new canvas at an actual decent size...
-	global.mainCanvasHandler = new canvasHandler("canvas");
+	global.mainCanvasHandler = new CanvasHandler("canvas");
+	global.mainDesignHandler = new DesignHandler();
 };
 ///////////////////////////////////////////////////////
 /////////////// EVENT-BASED FUNCTIONS ////////////////

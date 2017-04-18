@@ -1,6 +1,6 @@
-var scale = 1;
 
-var canvasHandler = function(canvasID){
+
+var CanvasHandler = function(canvasID){
   	// canvas id is "canvas"
 	// Initialize local variables here
 	/* ///FABRIC.JS STUFF
@@ -23,7 +23,7 @@ var canvasHandler = function(canvasID){
 	var path;
 	
 	this.drawingTool.onMouseDown = function(event){
-		//global.canvasHandler.activePath = new Path();
+		//global.CanvasHandler.activePath = new Path();
 		path = new Path();
 		path.strokeColor = 'black';
 		path.add(event.point);
@@ -33,6 +33,10 @@ var canvasHandler = function(canvasID){
 		path.add(event.point);
 	};
 	
+	this.drawingTool.onMouseUp = function(event){
+		global.mainDesignHandler.makeAndSetNewDesign();
+		global.mainDesignHandler.addPaperJSPath(path);
+	};
 	
 	/*
 	var path = new Path();
@@ -43,27 +47,28 @@ var canvasHandler = function(canvasID){
 	view.draw();
 	*/
 	
-	console.log("canvasHandler initialized with id " + canvasID);
+	console.log("CanvasHandler initialized with id " + canvasID);
 	
-}; // canvasHandler
+	return this;
+}; // CanvasHandler
 
-// Add functions to the canvasHandler prototype here
+// Add functions to the CanvasHandler prototype here
 // Note: Will load and be part of the above object, so can be called upon later
-// ie: when the new canvasHandler is made when the website loads
+// ie: when the new CanvasHandler is made when the website loads
 
 /// Sizing //////////////
-canvasHandler.prototype.setCanvasDimensions = function(width, height){
+CanvasHandler.prototype.setCanvasDimensions = function(width, height){
 
 };
 
 /// !! Clear all contents !! //////////////
-canvasHandler.prototype.clear = function(width, height){
+CanvasHandler.prototype.clear = function(width, height){
 
 };
 ////////////////////////////////////////////
 //////// DRAWING EVENTS ////////////////////
 ////////////////////////////////////////////
-canvasHandler.prototype.onDrawMouseDown = function(evt){
+CanvasHandler.prototype.onDrawMouseDown = function(evt){
 	
 };
 

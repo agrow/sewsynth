@@ -1,334 +1,99 @@
-var createPosition = function(){
-	var position = {
-		x: 1,
-		y: 1
-	};
-	return position;
-};
+var Design = function() {
+	this.id = global.designCount++;
+	this.pointCount = 0;
+	this.dimensions = {smallX: 999999, bigX: -999999, 
+					   smallX: 999999, bigX: -999999, 
+					   width: -1, height: -1};
+	
+	this.head = null;
+	this.tail = null;
+	
+	this.currentAnchor = this.createPosition(0, 0);
+	
+	// In order of creation
+	this.pointsStack = [];
+	// By ID
+	this.pointsMap = [];
+	
+	// By Location // TO DO LATER, IF IT'S USEFUL //
+	//this.pointsMapByLocation = [];
+	
+	this.defaultPath = null;
+	this.simplifiedPath = null;
+	
+	return this;
+} // Design
 
-var copyPosition = function(position){
-	var newPosition = createPosition();
-	newPosition.x = position.x;
-	newPosition.y = position.y;
-	return newPosition;
-};
-
-var createPoint = function(){
-	var point = {
-		id: null,
-		findID: function(){
-			var id = "";
-			id += point.position.x;
-			id += point.position.y;
-			point.id = id;
-		},
-		update: function(){
-			point.findID();
-		},
-		parent: null,
-		position: createPosition(),
-		// Point and Line connections
-		//0: null, // Up
-		//1: null, // Up-right
-		//2: null, // Right
-		//3: null, // Down-right
-		//4: null, // Down
-		//5: null, // Down-left
-		//6: null, // Left
-		//7: null, // Up-left
-		// Reflexive Pairs: 0-4, 1-5, 2-6, 3-7
-		adjLines: [null, null, null, null, null, null, null, null],
-		adjPoints: [null, null, null, null, null, null, null, null],
-		foundBalance: [false, false, false, false, false, false, false, false],
-		
-		// unordered
-		lines: [],
-		points: [],
-		
-		// Scoring for grammar! 0-1 scale.
-		densityScore:-1,
-		balanceScore:-1,
-		// There are 4 directions of balance, 12 major types of recombinations
-				// 4 line-based (across) --
-				// 12 pairs that skip an adj number >
-				// 12 triplets that are the previous 12 with a stem that bisects them ->
-				// 12 triplets that are the same as the last with the bisect that stretches outward >-
-				
-		// NOT on a scale of 0-1.
-		// Instead of finding every combination of lines, we count instances of pair or triplet balance found
-			// This does multi-count, for example > amd >- are separate counts. This is the only metric that captures it.
-		detailedBalanceScore: -1, 
-		balanceTypes:[], // The line of reflection in the balance: vert, hori, pDiag, nDiag. Same values as line direction.
-		scorePointBalance: function(){
-			// The score here determines "How many of the point's lines participate in some form of balance"
-			// Each line found is 1/8
-			point.balanceScore = 0;
-			point.detailedBalanceScore = 0;
-			point.balanceTypes = []; // Empty out previous balance types if they exist
-			point.foundBalance = [false, false, false, false, false, false, false, false];
-			//console.log("~~~ Checking balance of point " + point.id + " ~~~");
-			
-			// Check that there is more than 1 line to test for balance.
-			if(point.lines.length > 1){
-				// Check for the simplest: -- | / \ directly across
-				for(var i = 0; i < 4; i++){
-					//console.log(i + " what is my across ID? " + (i+4));
-					//console.log(point.adjLines[i]);
-					//console.log(point.adjLines[i+4]);
-					if(point.adjLines[i] !== null && point.adjLines[i+4] !== null){
-						// We found a pair! Its direction is either of the two points
-						//console.log("We found a straight pair! " + i + ", " + (i+4));
-						point.foundBalance[i] = true;
-						point.foundBalance[i+4] = true;
-						point.detailedBalanceScore++;
-						if(!$.inArray(point.adjLines[i].direction, point.balanceTypes)) {
-							point.balanceTypes.push(point.adjLines[i].direction);
-							//console.log("Found balance for point " + point.id + " of direction " + point.adjLines[i].direction);
-						}
-					}
-				}
-				
-				// Look at every line. Work clockwise so that we don't get repeats.
-				for(var i = 0; i < 8; i++){
-					var pair90 = (i+2)%8;
-					//console.log(i + " what is my pair90 ID?: " + pair90);
-					//console.log(point.adjLines);
-					//console.log(point.adjLines[i]);
-					//console.log(point.adjLines[pair90]);
-					
-					if(point.adjLines[i] !== null && point.adjLines[pair90] !== null){
-						//console.log("Found a 90Degree balance " + i + ", " + pair90);
-						point.foundBalance[i] = true;
-						point.foundBalance[pair90] = true;
-						point.detailedBalanceScore++;
-						var balanceType = "";
-						if(point.adjLines[i].direction === "hori") balanceType = "nDiag";
-						else if(point.adjLines[i].direction === "nDiag") balanceType = "vert";
-						else if(point.adjLines[i].direction === "vert") balanceType = "pDiag";
-						else balanceType = "hori";
-						if(!$.inArray(balanceType, point.balanceTypes)) {
-							point.balanceTypes.push(balanceType);
-							//console.log("Found balance for point " + point.id + " of direction " + balanceType);
-						}
-						
-						// Now for extra calculation for triplets in the detailedBalanceScore
-						// Note: these directions were already found, so we don't need to add them to balanceTypes again.
-						var innerBisect = (i+1)%8;
-						var outerBisect = (i+5)%8;
-						if(point.adjLines[innerBisect] !== null){
-							//console.log("found an innerBisect at " + innerBisect);
-							point.foundBalance[innerBisect] = true;
-							point.detailedBalanceScore++;
-						}
-						if(point.adjLines[outerBisect] !== null){
-							//console.log("found an outerBisect at " + outerBisect);
-							point.foundBalance[outerBisect] = true;
-							point.detailedBalanceScore++;
-						}
-					}
-					
-				}
-				
-				// Tally the final simple bisect count
-				for(var i = 0; i < point.foundBalance.length; i++){
-					if(point.foundBalance[i] === true) point.balanceScore += 1/8;
-				}
-				//console.log("FINAL SCORES FOUND FOR POINT " + point.id + ": " + point.balanceScore + ", " + point.detailedBalanceScore);
-			}
-		},
-		
-		scoreDensity: function(){
-			// For each adj line/point, add 1/8
-			point.densityScore = 0;
-			for(var i = 0; i < point.lines.length; i++){
-				point.densityScore += 1/8;
-			}
-		},
-		
-		findPointAtOtherEndOfLine: function(line){
-			for(i = 0; i < point.lines.length; i++){
-				if(point.lines[i].id === line.id){
-					// Figure out if this point is point 1 or 2 and return the other one
-					if(point.lines[i].point1.id === point.id){
-						// this is point 1. Send back point 2
-						return point.lines[i].point2;
-					} else {
-						// this is point 2. Send back point 1
-						return point.lines[i].point1;
-					}
-				}
-			}
-			// This line isn't attached!
-			console.log("This point " + point.id + " is not a part of line " + line.id);
-			return null;
+////////////////////////////////////////////////////////////////////////
+//////////////// POSITIONS & POINTS ////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+Design.prototype.createPosition = function (xPos, yPos) {
+	if(xPos === undefined || yPos === undefined ||
+		xPos === null || yPos === null){
+			console.err("Creating (0, 0) point because x or y of create point is undefined/null", xPos, yPos);
+			return {x: 0, y: 0};
+		} else {
+			return {x: xPos, y: yPos}
 		}
-	};
+		
+}; // createPosition
+
+Design.prototype.copyPostion = function(position){
+	if(position === undefined || position === null){
+		console.err("Cannot copy null/undefined position ", position);
+		return;
+	}
+	return this.createPosition(position.x, position.y);
+}; // copyPosition
+
+Design.prototype.addNewPoint = function(xPos, yPos){
+	var design = this;
+	var position;
+	
+	if(xPos === undefined || yPos === undefined ||
+		xPos === null || yPos === null){
+			position = design.createPosition(0, 0);
+		} else {
+			position = design.createPosition(xPos, yPos);
+		}
+	
+	var point = {
+		id: global.pointCount++,
+		pos: position, // {x: #, y: #}
+		prev: null, // point
+		next: null, // point
+		
+		// to do: Add any overhead necessary for easy point navigation, retrieval, or score evaluation
+		
+		// printing!
+		toString: function(){ 
+			return "(" + this.position.x + ", " + this.position.y + ")"; 
+		}
+	}; // point
+	
+	this.pointsStack.push(point);
+	this.pointMap[point.id] = point;
 	
 	return point;
-};
+}; // Design.createPoint
 
-// NOTE: BE CAREFUL WITH THIS COPY! There should never be copies of points (or lines) in the design
-// Everything with balance will be re-calculated by the owner of this copy (the grammar) once it manipulates it
-var copyPoint = function(point){
-	var newPoint = createPoint();
-	newPoint.position = copyPosition(point.position);
-	for(var i = 0; i < 8; i++){
-		if(point.adjLines[i] !== null) newPoint.adjLines[i] = point.adjLines[i];
-		if(point.adjPoints[i] !== null) newPoint.adjPoints[i] = point.adjPoints[i];
+// NOTE: CURRENTLY DOES NOT COPY PREV/NEXT! Why would you want to? That fucks things up!
+Design.prototype.copyPoint = function(point){
+	if(point === null || point === undefined){
+		console.err("Cannot copy null/undefined point", point);
+		return;
 	}
-	for(var i = 0; i < point.lines.length; i++){
-		newPoint.lines.push(point.lines[i]);
-	}
-	for(var i = 0; i < point.points.length; i++){
-		newPoint.points.push(point.points[i]);
-	}
-	newPoint.update();
-	newPoint.id += +"_COPY";
-	return newPoint;
-};
-
-var createLine = function(){
-	var line = {
-		id: null,
-		findID: function(){
-			var id = "";
-			id += line.point1.position.x;
-			id += line.point1.position.y;
-			id += line.point2.position.x;
-			id += line.point2.position.y;
-			line.id = id;
-		},
-		update: function(){
-			// Points have been changed? Re-calculate line info
-			line.findDirection(); // This also finds the point orientation
-			line.findID();
-		},
-		parent: null,
-		point1: createPoint(),
-		point2: createPoint(),
-		direction: "NA",
-		topOrRightPoint: null,
-		bottomOrLeftPoint: null,
-		findDirection: function(){
-			// Determines if the line is horizontal, vertical, posDiag, or 
-			// negDiag based on the x/y positions of its points
-			var pt1AdjNum = -1;
-			var pt2AdjNum = -1;
-			// for shortness' sake
-			var point1 = line.point1;
-			var point2 = line.point2;
-			if(point1.position.x === point2.position.x){
-				// Vertical
-				line.direction = "vert";
-				if(point1.position.y < point2.position.y){
-					// point 1 is on TOP, so its line and point are DOWN (4)
-					pt1AdjNum = 4;
-					pt2AdjNum = 0;
-					//point1.adjLines[4] = line;
-					//point1.adjPoints[4] = point2;
-					//point2.adjLines[0] = line;
-					//point2.adjPoints[0] = point1;
-				} else {
-					// point 2 is on top
-					pt1AdjNum = 0;
-					pt2AdjNum = 4;
-				}
-			} else if(point1.position.y === point2.position.y){
-				// Horizontal
-				line.direction = "hori";
-				if(point1.position.x > point2.position.x){
-					// point 1 is to the RIGHT, so its line and point are to the LEFT (6)
-					pt1AdjNum = 6;
-					pt2AdjNum = 2;
-				} else {
-					// point 2 is to the right
-					pt1AdjNum = 2;
-					pt2AdjNum = 6;
-				}
-			} else {
-				// Diagonal of some form
-				var top;
-				var right;
-				if(point1.position.y < point2.position.y) top = 1;
-				else top = 2;
-				if(point1.position.x > point2.position.x) right = 1;
-				else right = 2;
-				
-				if(top === right){
-					line.direction = "pDiag";
-					if(top === 1){
-						// point 1 is to the UP-RIGHT, so its line and point are to the down-left (5)
-						pt1AdjNum = 5;
-						pt2AdjNum = 1;
-					} else {
-						// point 2 is to the UP-RIGHT, so its line and point are to the down-left (5)
-						pt1AdjNum = 1;
-						pt2AdjNum = 5;
-					}
-				} else {
-					line.direction = "nDiag";
-					if(top === 1){
-						// point 1 is to the UP-LEFT, so its line and point are to the down-right (3)
-						pt1AdjNum = 3;
-						pt2AdjNum = 7;
-					} else {
-						pt1AdjNum = 7;
-						pt2AdjNum = 3;
-					}
-				}
-			}
-			
-			// finally make the link
-			// Note: the adjNums should never be -1 unless the points are on top of each other
-			// Which should also never happen because we check if the points exist when making the line!
-			point1.adjLines[pt1AdjNum] = line;
-			point1.adjPoints[pt1AdjNum] = point2;
-			point2.adjLines[pt2AdjNum] = line;
-			point2.adjPoints[pt2AdjNum] = point1;
-			
-			line.findPointOrientation(1, pt1AdjNum);
-		},
-		
-		// NOTE: currently only uses point === 1 because it would be redundant copy-paste code to do it for point === 2.
-		// If you ever plan to use it for point === 2, make that part of the function!
-		findPointOrientation: function(point, adjNum){
-			//console.log("Checking point orientation: " + point + ", " + adjNum);
-			// Upper/right half of the map
-			if(point === 1){
-				if(adjNum === 7 || adjNum === 0 || adjNum === 1 || adjNum === 2){
-					// Point 1 is dominant	
-					line.topOrRightPoint = line.point1;
-					line.bottomOrLeftPoint = line.point2;
-					//console.log("point1 dominant");
-				} else {
-					// point 2 is dominant
-					line.topOrRightPoint = line.point2;
-					line.bottomOrLeftPoint = line.point1;
-					//console.log("point2 dominant");
-				}
-			}  else {
-				console.log("ERRROR: Don't call findPointOrientation with point !== 1 until you implement this part");
-			}
-			 
-		},
-		
-		removeMe: function(){
-			var parentDesign = allDesigns[line.parent];
-			// For start and end points:
-				// Does this point connect to any other points?
-				//		If so, disconnect the line and leave the point
-				//		If not, remove the point
-			// Remove line
-			
-		}
-	};
 	
-	return line;
-};
+	var newPoint = this.addNewPoint(point.pos.x, point.pos.y);
+	return newPoint;
+}; // Design.copyPoint
 
-var designCount = 0;
-var allDesigns = [];
+////////////////////////////////////////////////////////////////////////
+/////// DESIGN DIMENSIONS //////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
 
+
+/*
 var createDesign = function(){
 	var design = {
 		absoluteRoot: createPosition(),
@@ -964,3 +729,4 @@ var createDesign = function(){
 };
 
 
+*/
