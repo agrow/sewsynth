@@ -27,6 +27,8 @@ var CanvasHandler = function(canvasID){
 		path = new Path();
 		path.strokeColor = 'black';
 		path.add(event.point);
+		path.selected = true;
+		path.opacity = 0.5
 	};
 	
 	this.drawingTool.onMouseDrag = function(event){
@@ -34,8 +36,12 @@ var CanvasHandler = function(canvasID){
 	};
 	
 	this.drawingTool.onMouseUp = function(event){
+		//console.log("mouseup", path);
+		path.selected = false;
 		global.mainDesignHandler.makeAndSetNewDesign();
 		global.mainDesignHandler.addPaperJSPath(path);
+		
+		//console.log("deselected", path);
 	};
 	
 	/*

@@ -47,9 +47,6 @@ body {
     
 }
 
-#mainDiv {
-}
-
 html, body, #hundred {
   height: 100%;
   width: 100%;
@@ -73,3 +70,26 @@ div {
 	//border-color:black;	
 }
 
+.menu_div {
+	background: #efdfff;
+	border-radius: 5px;
+	padding: 5px;
+	margin: 5px;
+	height: 30px;
+	width: 100px;
+	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.6), 0 6px 10px 0 rgba(0, 0, 0, 0.6);
+	position:absolute;
+	
+	-webkit-transition: width .5s, height .5s; /* Safari */
+    transition: width .5s, height .5s;
+    transition-timing-function: ease-in-out;
+}
+
+.menu_div:hover{
+	width:150px;
+	height:300px;
+}
+
+.menu_item {
+	
+}

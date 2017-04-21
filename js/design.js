@@ -2,7 +2,7 @@ var Design = function() {
 	this.id = global.designCount++;
 	this.pointCount = 0;
 	this.dimensions = {smallX: 999999, bigX: -999999, 
-					   smallX: 999999, bigX: -999999, 
+					   smallY: 999999, bigY: -999999, 
 					   width: -1, height: -1};
 	
 	this.head = null;
@@ -20,6 +20,9 @@ var Design = function() {
 	
 	this.defaultPath = null;
 	this.simplifiedPath = null;
+	
+	// JANK-FAST
+	this.pathPoints = [];
 	
 	return this;
 } // Design
@@ -88,10 +91,34 @@ Design.prototype.copyPoint = function(point){
 	return newPoint;
 }; // Design.copyPoint
 
+// Round PATHPOINTS positions to their next whole number...
+Design.prototype.roundPathPoints = function(){
+	for(var i = 0; i < this.pathPoints.length; i++){
+		this.pathPoints[i].x = Math.round(this.pathPoints[i].x);
+		this.pathPoints[i].y = Math.round(this.pathPoints[i].y);
+	}
+};
+
 ////////////////////////////////////////////////////////////////////////
 /////// DESIGN DIMENSIONS //////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
 
+// TO DO: BASED ON OTHER POINTS
+Design.prototype.calcDimensionsBasedOnPathPoints = function(){
+	this.dimensions = {smallX: 999999, bigX: -999999, 
+					   smallY: 999999, bigY: -999999, 
+					   width: -1, height: -1};
+	
+	for(var i = 0; i < this.pathPoints.length; i++){
+		if(this.pathPoints.x < this.dimensions.smallX) this.dimensions.smallX = this.pathPoints.x;
+		if(this.pathPoints.y < this.dimensions.smallY) this.dimensions.smallY = this.pathPoints.y;
+		if(this.pathPoints.x > this.dimensions.bigX) this.dimensions.bigX = this.pathPoints.x;
+		if(this.pathPoints.y > this.dimensions.bigY) this.dimensions.bigY = this.pathPoints.y;
+	}
+	
+	this.dimensions.width = this.dimensions.bigX - this.dimensions.smallX;
+	this.dimensions.height = this.dimensions.bigY - this.dimensions.smallY;
+};
 
 /*
 var createDesign = function(){

@@ -6,6 +6,8 @@ var global = {
 	scale: 1, // May be modified to change zoom/scale of drawing designs
 	designCount: 0,
 	pointCount: 0,
+	// GUIelements, not necessary to put them here, but helpful to know what's up
+	design_sliders: {visible: false},
 };
 
 var saveCalculatedDimensions = function(){
@@ -17,6 +19,9 @@ var saveCalculatedDimensions = function(){
 var initCanvas = function(){
 	saveCalculatedDimensions(); // Needed to initialize new canvas at an actual decent size...
 	global.mainCanvasHandler = new CanvasHandler("canvas");
+};
+
+var initDesignHandler = function(){
 	global.mainDesignHandler = new DesignHandler();
 };
 ///////////////////////////////////////////////////////
@@ -36,5 +41,8 @@ window.addEventListener("resize", function(){
 $( document ).ready(function() {
 	// Import the rest of the functions
 	initCanvas();
+	initDesignHandler();
+	initilizeMenus();
+	
 	console.log( "ready!" );
 });
