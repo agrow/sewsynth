@@ -7,7 +7,8 @@ var global = {
 	designCount: 0,
 	pointCount: 0,
 	// GUIelements, not necessary to put them here, but helpful to know what's up
-	design_sliders: {visible: false},
+	design_options: {visible: false},
+	view_options: {visible: false},
 };
 
 var saveCalculatedDimensions = function(){
@@ -24,6 +25,8 @@ var initCanvas = function(){
 var initDesignHandler = function(){
 	global.mainDesignHandler = new DesignHandler();
 };
+
+
 ///////////////////////////////////////////////////////
 /////////////// EVENT-BASED FUNCTIONS ////////////////
 ///////////////////////////////////////////////////////
@@ -33,16 +36,21 @@ var initDesignHandler = function(){
 window.addEventListener("resize", function(){
 	saveCalculatedDimensions();
 	
-	//if(global.mainCanvasHandler !== null){
-	//	global.mainCanvasHandler.setCanvasDimensions(global.calcWidth, global.calcHeight);
-	//}
+	// resize canvas to CANVAS SIZE! aka main Div size!
+	paper.view.viewSize.width = global.calcWidth;
+	paper.view.viewSize.height = global.calcHeight;
+	
+	// move menus
+	updateMenuPositions();
 });
 
 $( document ).ready(function() {
 	// Import the rest of the functions
 	initCanvas();
 	initDesignHandler();
-	initilizeMenus();
+	initilizeMenus(); // in guiHandler.js
+	// Move the menus over... need to also update this on resize...
+	updateMenuPositions();
 	
 	console.log( "ready!" );
 });

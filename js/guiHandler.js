@@ -48,11 +48,15 @@ var hideMenuGuts = function(menuID){
 ////////////////////////////////////////////////
 var initilizeMenus = function(){
 	// Menus should, on enter and exit, show/hide their content.
-	// #design_sliders
-	setupMenu("design_sliders");
+	// !!! NOTE: Make sure IDs match in this function! And in main's global! !!!
+	setupMenu("design_options");
+	setupMenu("view_options");
 	
 	// Line simplifier function slider //#lineSimplifierTolerance
-	addSliderToGUI("design_sliders", "lineSimplifierTolerance", {min: .5, max: 10, step: .5, value:2.5});
+	addSliderToGUI("design_options", "lineSimplifierTolerance", {min: .5, max: 10, step: .5, value:2.5});
+	
+	// BUTTONS!
+	
 	
 	console.log("Menus initialized");
 };
@@ -68,3 +72,18 @@ var setupMenu = function(ID){
 			global[ID].visible = false;
 		});
 }
+
+var moveMenu = function(ID, toX, toY){
+	$("#" + ID).css({
+	    position: 'absolute',
+	    left: toX,
+	    top: toY
+	});
+};
+
+// Main's global.calcHeight size is the mainDiv... $("#mainDiv").height();
+// We need THE WHOLE ENCHILADA!
+var updateMenuPositions = function(){
+	moveMenu("view_options", $("#hundred").width()-$("#view_options").outerWidth(true), 0);
+	moveMenu("print", 0, $("#hundred").height()-$("#print").outerHeight(true));
+};

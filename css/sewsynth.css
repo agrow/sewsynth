@@ -76,13 +76,23 @@ div {
 	padding: 5px;
 	margin: 5px;
 	height: 30px;
-	width: 100px;
+	width: 150px;
 	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.6), 0 6px 10px 0 rgba(0, 0, 0, 0.6);
 	position:absolute;
 	
 	-webkit-transition: width .5s, height .5s; /* Safari */
     transition: width .5s, height .5s;
     transition-timing-function: ease-in-out;
+}
+
+.menu_div_nonExpanding{
+	background: #efdfff;
+	border-radius: 5px;
+	padding: 5px;
+	margin: 5px;
+	width: 150px;
+	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.6), 0 6px 10px 0 rgba(0, 0, 0, 0.6);
+	position:absolute;
 }
 
 .menu_div:hover{
