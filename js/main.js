@@ -46,9 +46,11 @@ window.addEventListener("resize", function(){
 
 $( document ).ready(function() {
 	// Import the rest of the functions
-	initCanvas();
+	initCanvas(); // also initializes canvasHandler
 	initDesignHandler();
-	initilizeMenus(); // in guiHandler.js
+	initilizeMenus(); // in guiHandler.js 
+	// ^ !! NOTE !! Must be called after DesignHandler as it uses a function in the global.mainDesignHandler
+	
 	// Move the menus over... need to also update this on resize...
 	updateMenuPositions();
 	

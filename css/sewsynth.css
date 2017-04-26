@@ -76,7 +76,7 @@ div {
 	padding: 5px;
 	margin: 5px;
 	height: 30px;
-	width: 150px;
+	width: 200px;
 	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.6), 0 6px 10px 0 rgba(0, 0, 0, 0.6);
 	position:absolute;
 	
@@ -90,16 +90,15 @@ div {
 	border-radius: 5px;
 	padding: 5px;
 	margin: 5px;
-	width: 150px;
 	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.6), 0 6px 10px 0 rgba(0, 0, 0, 0.6);
 	position:absolute;
 }
 
 .menu_div:hover{
-	width:150px;
-	height:300px;
+	width:200px;
+	height:250px;
 }
 
 .menu_item {
-	
+	visibility: hidden;
 }

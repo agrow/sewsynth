@@ -10,7 +10,7 @@
 
 // Note: // Getter: var value = $( ".selector" ).slider( "option", "value" );
 var addSliderToGUI = function(parentID, id, options){
-	var slide = $('<div/>', {id: id, 'class': parentID + "_menuGuts menu_item"}).appendTo('#' + parentID);
+	var slide = $('<div/>', {id: id, 'class': parentID + "_menuGuts menu_item ui-slider"}).appendTo('#' + parentID);
 	
 	if(options !== undefined){
 		slide.slider(options); // jquery ui slider initialization
@@ -18,8 +18,7 @@ var addSliderToGUI = function(parentID, id, options){
 		slide.slider();
 	}
 	
-	if(global[parentID].visible === true) showMenuGuts(parentID)
-	else hideMenuGuts(parentID)
+	updateMenuVisibilityContents([parentID]);
 };
 
 var getValueOfSlider = function(id){
@@ -27,6 +26,7 @@ var getValueOfSlider = function(id){
 	return val;
 };
 
+// UNFINISHED
 var addOnChangeToSlider = function(id, onChangeFn){
 	var slider = $('#' + id);
 };
@@ -41,25 +41,17 @@ var hideMenuGuts = function(menuID){
 	$("." + menuID + "_menuGuts").css('visibility', 'hidden');
 };
 
+var updateMenuVisibilityContents = function(menus){
+	for(var i = 0; i < menus.length; i++){
+		if(global[menus[i]].visible === true) showMenuGuts(menus[i])
+		else hideMenuGuts(menus[i])
+	
+	}
+}
 
-
-////////////////////////////////////////////////
-/////// Called in main ////////////////////////
-////////////////////////////////////////////////
-var initilizeMenus = function(){
-	// Menus should, on enter and exit, show/hide their content.
-	// !!! NOTE: Make sure IDs match in this function! And in main's global! !!!
-	setupMenu("design_options");
-	setupMenu("view_options");
-	
-	// Line simplifier function slider //#lineSimplifierTolerance
-	addSliderToGUI("design_options", "lineSimplifierTolerance", {min: .5, max: 10, step: .5, value:2.5});
-	
-	// BUTTONS!
-	
-	
-	console.log("Menus initialized");
-};
+//////////////////////////////////////
+///////////// Menu Manipulation //////////////////////////
+/////////////////////////////////////
 
 var setupMenu = function(ID){
 	$("#" + ID)
@@ -86,4 +78,29 @@ var moveMenu = function(ID, toX, toY){
 var updateMenuPositions = function(){
 	moveMenu("view_options", $("#hundred").width()-$("#view_options").outerWidth(true), 0);
 	moveMenu("print", 0, $("#hundred").height()-$("#print").outerHeight(true));
+};
+
+////////////////////////////////////////////////
+/////// Called in main ////////////////////////
+////////////////////////////////////////////////
+var initilizeMenus = function(){
+	// Menus should, on enter and exit, show/hide their content.
+	// !!! NOTE: Make sure IDs match in this function! And in main's global! !!!
+	setupMenu("design_options");
+	setupMenu("view_options");
+	
+	// Line simplifier function slider //#lineSimplifierTolerance
+	addSliderToGUI("design_options", "lineSimplifierTolerance", {min: .5, max: 10, step: .5, value:2.5});
+	
+	// Radio button selectors 
+	$( "input[type='radio']" ).checkboxradio().on("change", function(e){global.mainDesignHandler.updatePathSelection($( e.target ).val())});
+	//(v this hides the radio selector)
+	updateMenuVisibilityContents(["design_options", "view_options"]);
+	
+	// BUTTONS!
+	// This one is not invisible, so we just add it manually and let it float...
+	var saveButton = $('<div/>', {id: "save_button", 'class': "ui-button"}).appendTo("#print");
+	saveButton.button({label:"Save to DST"}).click(function() {global.mainDesignHandler.saveAllDesignsToFile();});
+	
+	console.log("Menus initialized");
 };

@@ -20,6 +20,7 @@ var Design = function() {
 	
 	this.defaultPath = null;
 	this.simplifiedPath = null;
+	this.flattenedPath = null;
 	
 	// JANK-FAST
 	this.pathPoints = [];

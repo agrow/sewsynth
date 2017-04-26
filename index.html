@@ -28,8 +28,18 @@
 		
 		<!-- remember to register these in the guiHandler! -->
 		<div class="menu_div" id="design_options">Design Options</div>
-		<div class="menu_div" id="view_options">View Options</div>
-		<div class="menu_div_nonExpanding" id="print">Save</div>
+		<div class="menu_div" id="view_options">View Options
+			<fieldset class="view_options_menuGuts menu_item">
+			  <legend>Selecting: </legend>
+			  <label for="radio-1">Path</label>
+			  <input type="radio" name="radio-1" id="radio-1" value="path-complex">
+			  <label for="radio-2">Simplified Path</label>
+			  <input type="radio" name="radio-1" id="radio-2" value="path-simple">
+			  <label for="radio-3">Segmented Path</label>
+			  <input type="radio" name="radio-1" id="radio-3"  value="path-segmented">
+			</fieldset>
+		</div>
+		<div class="menu_div_nonExpanding" id="print"></div>
 
 		<!-- sewing library files -->
 		<script src="js/libs/FileSaver.js"></script>
