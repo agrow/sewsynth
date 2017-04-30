@@ -3,7 +3,7 @@
 // Options: distance of points, how exact those points should be
 //// path.flatten([maximum error, default 0.25]);
 var parsePaperPathToPoints = function(path, options){
-	var localPath = path.clone();
+	var localPath = path.clone();//{insert:false});
 	//localPath.selected = false;
 	//localPath.opacity = 0;
 	console.log(localPath);
@@ -21,6 +21,9 @@ var DesignHandler = function(){
 	this.designs = [];
 	this.activeDesign = null;
 	this.scale = 2;
+	// 121 is the default max distance a stitch can go.
+	// However, if we aim to make a stitch approximately every 2.5 mm, that would be every 25 units?
+	this.threshold = 121; // 121 is the default max distance a stitch can go.
 	
 	console.log("DesignHandler initialized");
 	
@@ -80,44 +83,88 @@ DesignHandler.prototype.addPaperJSPath = function(path){
 		return;
 	}
 	
-	this.activeDesign.defaultPath = path.clone({insert:false}); // does not add to scene
+	this.activeDesign.defaultPath = path.clone(); // does not add to scene
 	this.activeDesign.simplifiedPath = path.clone();
 	console.log("default path size ", path.segments.length)
 	
 	// Now simplify the simplified path
 	this.activeDesign.simplifiedPath.simplify(getValueOfSlider("lineSimplifierTolerance"));
-	this.activeDesign.simplifiedPath.selected = true;
+	//this.activeDesign.simplifiedPath.selected = true;
 	this.activeDesign.simplifiedPath.opacity = 1;
 	console.log("simplified segment count ", this.activeDesign.simplifiedPath.segments.length);
 	
 	// Then translate it to our design line
 	this.activeDesign.pathPoints = parsePaperPathToPoints(this.activeDesign.simplifiedPath);
 	console.log("pathPoints from simplified path ", this.activeDesign.pathPoints.length);
-	
+	this.activeDesign.flattenedPath = this.activeDesign.simplifiedPath.clone();
+	this.activeDesign.flattenedPath.flatten(1);
 	// Then apply some design xform
 	
 	// Prep to print
 	this.activeDesign.roundPathPoints(); // Makes printing and sewing clearer/easier. BW was always in integers
 	this.activeDesign.calcDimensionsBasedOnPathPoints();
 	// SHOULD BE DONE OUT OF HERE
-	this.saveAllDesignsToFile();
-	
+	//this.saveAllDesignsToFile();
+	// added to save button .click()
+	this.updatePathSelection("path-segmented");
 	
 	console.log("paperJSPath imported to activeDesign complete"); //, path);
 };
+
+DesignHandler.prototype.updatePathSelection = function(selected){
+	console.log("updating path to select ", selected);
+	for(var i = 0; i < this.designs.length; i++){
+		// Deselect all
+		this.designs[i].defaultPath.selected = false;
+		this.designs[i].simplifiedPath.selected = false;
+		this.designs[i].flattenedPath.selected = false;
+		// Then select only the right ones
+		if(selected === "path-complex"){
+			this.designs[i].defaultPath.selected = true;
+		} else if (selected === "path-simple"){
+			this.designs[i].simplifiedPath.selected = true;
+		} else if (selected === "path-segmented"){
+			this.designs[i].flattenedPath.selected = true;
+		} else {
+			// Haha! It's none of them!
+		}
+	}
+	
+	// do it for the active design as well
+	// Deselect...
+	this.activeDesign.defaultPath.selected = false;
+	this.activeDesign.simplifiedPath.selected = false;
+	this.activeDesign.flattenedPath.selected = false;
+	// Then select the right ones
+	if(selected === "path-complex"){
+		this.activeDesign.defaultPath.selected = true;
+	} else if (selected === "path-simple"){
+		this.activeDesign.simplifiedPath.selected = true;
+	} else if (selected === "path-segmented"){
+		this.activeDesign.flattenedPath.selected = true;
+	} else {
+		// Haha! It's none of them!
+	}
+	
+};
+
 
 // NOTE: Currently colors are not supported, so we send "true" to use auto-color
 DesignHandler.prototype.saveAllDesignsToFile = function(){
 	this.closeActiveDesign(); // So they are all on this.designs
 	var stPattern = new Pattern();
 	
-	// gotta add an anchor point
-	stPattern.addStitchAbs(0, 0, stitchTypes.jump, true);
+	
 	
 	// JUMP to the first stitch of this.designs if it exists
 	if(this.designs.length > 0 && this.designs[0].pathPoints.length > 0){
 		var firstStitch = this.designs[0].pathPoints[0];
-		this.fillInStitchGapsAndAddStitchAbs(stPattern, this.scale, firstStitch.x, firstStitch.y, stitchTypes.jump, true);
+		stPattern.addStitchAbs(firstStitch.x*this.scale, firstStitch.y*this.scale, stitchTypes.jump, true);
+		//this.fillInStitchGapsAndAddStitchAbs(stPattern, this.scale, firstStitch.x, firstStitch.y, stitchTypes.jump, true, this.threshold);
+	} else {
+		// There are no points in the first design?! WTF?!
+		// gotta add an anchor point,this will be at the upper left?
+		stPattern.addStitchAbs(0, 0, stitchTypes.jump, true);
 	}
 	
 	// For each old design, in order, stitch them out jumping between each
@@ -125,13 +172,13 @@ DesignHandler.prototype.saveAllDesignsToFile = function(){
 		// For each point in this design, stitch to there!
 		for(var j = 0; j < this.designs[i].pathPoints.length; j++){
 			var point = this.designs[i].pathPoints[j];
-			this.fillInStitchGapsAndAddStitchAbs(stPattern, this.scale, point.x, point.y, stitchTypes.normal, true);
+			this.fillInStitchGapsAndAddStitchAbs(stPattern, this.scale, point.x, point.y, stitchTypes.normal, true, this.threshold);
 		}
 		// If there are more designs after this one...
 		if(i < this.designs.length-1) {
 			// JUMP from the last stitch of this design to the last stitch of the next
 			var firstStitch = this.designs[i+1].pathPoints[0];
-			this.fillInStitchGapsAndAddStitchAbs(stPattern, this.scale, firstStitch.x, firstStitch.y, stitchTypes.jump, true);
+			this.fillInStitchGapsAndAddStitchAbs(stPattern, this.scale, firstStitch.x, firstStitch.y, stitchTypes.jump, true, this.threshold);
 		}
 	}
 	
@@ -152,12 +199,13 @@ DesignHandler.prototype.saveAllDesignsToFile = function(){
 	
 	// And print!
 	var rando = Math.floor(Math.random() * 1000);
-	dstWrite("drawing" + rando + ".dst", stPattern); // dstformat.js
+	var name = "draw_" + $.datepicker.formatDate('mm-dd-yy', new Date()) + "_" + rando + ".dst";
+	dstWrite(name, stPattern); // dstformat.js
 	
-	console.log("Saved file to drawing" + rando + ".dst");
+	console.log("Saved file to " + name);
 };
 
-DesignHandler.prototype.fillInStitchGapsAndAddStitchAbs = function(stPattern, scale, x, y, flags, color){
+DesignHandler.prototype.fillInStitchGapsAndAddStitchAbs = function(stPattern, scale, x, y, flags, color, threshold = 121){
 	var tempX = x;//*scale;
 	var tempY = y;//*scale;
 	
@@ -167,28 +215,29 @@ DesignHandler.prototype.fillInStitchGapsAndAddStitchAbs = function(stPattern, sc
 	var newX = 0;
 	var newY = 0;
 	
+	// IF the next diff, at scale, would be too big... SHORTEN IT!
 	var xDiff = (x - lastStitch.x)*scale;
 	var yDiff = (y - lastStitch.y)*scale;
 	var count = 0; // Just in case!
 	
 	//console.log("__Diffs: " + xDiff + ", " + yDiff);
 	
-	while((xDiff > 121 || xDiff < -121 || yDiff > 121 || yDiff < -121) && count < 1000){
+	while((xDiff > threshold || xDiff < -threshold || yDiff > threshold || yDiff < -threshold) && count < 1000){
 		
-		if(xDiff > 121){
-			newX = 121;
-			xDiff -= 121;
-		} else if (xDiff < -121) { 
-			newX = -121;
-			xDiff += 121;
+		if(xDiff > threshold){
+			newX = threshold;
+			xDiff -= threshold;
+		} else if (xDiff < -threshold) { 
+			newX = -threshold;
+			xDiff += threshold;
 		}
 		
-		if(yDiff > 121){
-			newY = 121;
-			yDiff -= 121;
-		} else if (yDiff < -121) { 
-			newY = -121;
-			yDiff += 121;
+		if(yDiff > threshold){
+			newY = threshold;
+			yDiff -= threshold;
+		} else if (yDiff < -threshold) { 
+			newY = -threshold;
+			yDiff += threshold;
 		}
 		
 		//console.log("adding intermediate relative stitch +/-: " + newX + ", " + newY);
