@@ -139,6 +139,10 @@ DesignHandler.prototype.saveAllDesignsToFile = function(){
 	stPattern.addStitchRel(0, 0, stitchTypes.end, true);
 	console.log("pattern stitches!: " + stPattern.stringifyStitches());
 	
+	// Scale up // NOTE: Simple scaling does not work. Can too easily make a jump too long (>121)
+	// This is why, when we place stitches, we use the scale to test how long the scale WILL extend stitches
+	stPattern.scale(this.scale);
+	
 	// Flip them vertically, because the sewing will be read upside-down
 	stPattern.invertPatternVertical();
 	console.log("pattern post-invert!: " + stPattern.stringifyStitches());
