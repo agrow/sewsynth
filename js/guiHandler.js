@@ -9,7 +9,9 @@
 // }
 
 // Note: // Getter: var value = $( ".selector" ).slider( "option", "value" );
-var addSliderToGUI = function(parentID, id, options){
+var addSliderToGUI = function(parentID, id, labelText, options){
+	var label = $('<div/>', {'class': parentID + "_menuGuts menu_item"}).appendTo('#' + parentID);
+	label.html(labelText);
 	var slide = $('<div/>', {id: id, 'class': parentID + "_menuGuts menu_item ui-slider"}).appendTo('#' + parentID);
 	
 	if(options !== undefined){
@@ -43,11 +45,11 @@ var hideMenuGuts = function(menuID){
 
 var updateMenuVisibilityContents = function(menus){
 	for(var i = 0; i < menus.length; i++){
-		if(global[menus[i]].visible === true) showMenuGuts(menus[i])
-		else hideMenuGuts(menus[i])
+		if(global[menus[i]].visible === true) showMenuGuts(menus[i]);
+		else hideMenuGuts(menus[i]);
 	
 	}
-}
+};
 
 //////////////////////////////////////
 ///////////// Menu Manipulation //////////////////////////
@@ -63,7 +65,7 @@ var setupMenu = function(ID){
 			hideMenuGuts(ID);
 			global[ID].visible = false;
 		});
-}
+};
 
 var moveMenu = function(ID, toX, toY){
 	$("#" + ID).css({
@@ -90,10 +92,20 @@ var initilizeMenus = function(){
 	setupMenu("view_options");
 	
 	// Line simplifier function slider //#lineSimplifierTolerance
-	addSliderToGUI("design_options", "lineSimplifierTolerance", {min: .5, max: 10, step: .5, value:2.5});
+	addSliderToGUI("design_options", "lineSimplifierTolerance", "Line Simplifier Tolerance", {
+															min: .1, max: 5, step: .1, value:2.5,
+															change: function(event, ui){ global.mainDesignHandler.regenerateAllDerivedPaths(); },
+															slide: function(event, ui){ global.mainDesignHandler.regenerateAllDerivedPaths(); } });
+	addSliderToGUI("design_options", "lineFlatness", "Line Flatten Allowed Error", {
+															min: .5, max: 15, step: .5, value:2.5,
+															change: function(event, ui){ global.mainDesignHandler.regenerateAllDerivedPaths(); },
+															slide: function(event, ui){ global.mainDesignHandler.regenerateAllDerivedPaths(); } });
+	
 	
 	// Radio button selectors 
-	$( "input[type='radio']" ).checkboxradio().on("change", function(e){global.mainDesignHandler.updatePathSelection($( e.target ).val())});
+	// Set default checked, matches default in designHandler...
+	$("#radio-3").prop('checked', true);
+	$( "input[type='radio']" ).checkboxradio().on("change", function(e){ global.mainDesignHandler.updatePathSelection($( e.target ).val()); });
 	//(v this hides the radio selector)
 	updateMenuVisibilityContents(["design_options", "view_options"]);
 	

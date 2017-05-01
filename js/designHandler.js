@@ -1,26 +1,10 @@
-// Input: Paperjs Path
-// Output: [points]
-// Options: distance of points, how exact those points should be
-//// path.flatten([maximum error, default 0.25]);
-var parsePaperPathToPoints = function(path, options){
-	var localPath = path.clone();//{insert:false});
-	//localPath.selected = false;
-	//localPath.opacity = 0;
-	console.log(localPath);
-	localPath.flatten(1); // ToDo: slider
-	var points = [];
-	for (var i = 0; i < localPath.segments.length; i++){
-		points.push(localPath.segments[i].point.clone());
-	}
-	
-	console.log(points);
-	return points;
-};
 
 var DesignHandler = function(){
 	this.designs = [];
 	this.activeDesign = null;
 	this.scale = 2;
+	
+	this.lastSelectedLineType = "path-segmented";
 	// 121 is the default max distance a stitch can go.
 	// However, if we aim to make a stitch approximately every 2.5 mm, that would be every 25 units?
 	this.threshold = 121; // 121 is the default max distance a stitch can go.
@@ -83,22 +67,25 @@ DesignHandler.prototype.addPaperJSPath = function(path){
 		return;
 	}
 	
-	this.activeDesign.defaultPath = path.clone(); // does not add to scene
-	this.activeDesign.simplifiedPath = path.clone();
-	console.log("default path size ", path.segments.length)
+	this.activeDesign.regeneratePaths({	"path": path, 
+										tolerance: getValueOfSlider("lineSimplifierTolerance"),
+										flatness: getValueOfSlider("lineFlatness"),});
+	console.log("default path size ", path.segments.length);
 	
 	// Now simplify the simplified path
-	this.activeDesign.simplifiedPath.simplify(getValueOfSlider("lineSimplifierTolerance"));
-	//this.activeDesign.simplifiedPath.selected = true;
-	this.activeDesign.simplifiedPath.opacity = 1;
+	//this.activeDesign.simplifiedPath.simplify(getValueOfSlider("lineSimplifierTolerance"));
+
 	console.log("simplified segment count ", this.activeDesign.simplifiedPath.segments.length);
 	
 	// Then translate it to our design line
-	this.activeDesign.pathPoints = parsePaperPathToPoints(this.activeDesign.simplifiedPath);
-	console.log("pathPoints from simplified path ", this.activeDesign.pathPoints.length);
-	this.activeDesign.flattenedPath = this.activeDesign.simplifiedPath.clone();
-	this.activeDesign.flattenedPath.flatten(1);
+	//this.activeDesign.pathPoints = parsePaperPathToPoints(this.activeDesign.simplifiedPath);
+	
+	//this.activeDesign.flattenedPath = this.activeDesign.simplifiedPath.clone();
+	//this.activeDesign.flattenedPath.flatten(1);
 	// Then apply some design xform
+	
+	this.activeDesign.parsePathToPoints(this.activeDesign.flattenedPath);
+	console.log("pathPoints from flattened path ", this.activeDesign.pathPoints.length);
 	
 	// Prep to print
 	this.activeDesign.roundPathPoints(); // Makes printing and sewing clearer/easier. BW was always in integers
@@ -106,46 +93,54 @@ DesignHandler.prototype.addPaperJSPath = function(path){
 	// SHOULD BE DONE OUT OF HERE
 	//this.saveAllDesignsToFile();
 	// added to save button .click()
-	this.updatePathSelection("path-segmented");
+	this.updatePathSelection(this.lastSelectedLineType);
 	
 	console.log("paperJSPath imported to activeDesign complete"); //, path);
 };
 
 DesignHandler.prototype.updatePathSelection = function(selected){
 	console.log("updating path to select ", selected);
+	this.lastSelectedLineType = selected;
+	
 	for(var i = 0; i < this.designs.length; i++){
 		// Deselect all
-		this.designs[i].defaultPath.selected = false;
-		this.designs[i].simplifiedPath.selected = false;
-		this.designs[i].flattenedPath.selected = false;
-		// Then select only the right ones
-		if(selected === "path-complex"){
-			this.designs[i].defaultPath.selected = true;
-		} else if (selected === "path-simple"){
-			this.designs[i].simplifiedPath.selected = true;
-		} else if (selected === "path-segmented"){
-			this.designs[i].flattenedPath.selected = true;
-		} else {
-			// Haha! It's none of them!
-		}
+		this.designs[i].hideAndDeselectAllPaths();
+		this.designs[i].showAndSelectPath(selected);
 	}
 	
 	// do it for the active design as well
 	// Deselect...
-	this.activeDesign.defaultPath.selected = false;
-	this.activeDesign.simplifiedPath.selected = false;
-	this.activeDesign.flattenedPath.selected = false;
-	// Then select the right ones
-	if(selected === "path-complex"){
-		this.activeDesign.defaultPath.selected = true;
-	} else if (selected === "path-simple"){
-		this.activeDesign.simplifiedPath.selected = true;
-	} else if (selected === "path-segmented"){
-		this.activeDesign.flattenedPath.selected = true;
+	this.activeDesign.hideAndDeselectAllPaths();
+	this.activeDesign.showAndSelectPath(selected);
+};
+
+DesignHandler.prototype.regenerateAllDerivedPaths = function(inputParams){
+	var params = {};
+	if(inputParams === undefined){
+		// Grab the slider parts, regenerate and make from existing path
+		params = {
+			tolerance: getValueOfSlider("lineSimplifierTolerance"),
+			flatness: getValueOfSlider("lineFlatness"),
+		};
 	} else {
-		// Haha! It's none of them!
+		// NOTE: This should only be called when generateAllDerivedPaths is called on the activeDesign
+		// otherwise, it would possibly set the path of other designs, WHICH WOULD BE BAD!!!
+		console.log("!! Dangerous, calling regenerateAllPaths with params !!");
+		params = inputParams;
+	}
+	console.log("regenerateAllDerivedPaths with new parameters", params);
+	
+	for(var i = 0; i < this.designs.length; i++){
+		this.designs[i].regeneratePaths(params);
+		//this.designs[i].prepForPrint(); // honestly should just be done when we're printing...
 	}
 	
+	// do it for the active design as well
+	this.activeDesign.regeneratePaths(params);
+	//this.activeDesign.prepForPrint();  // honestly should just be done when we're printing...
+	
+	// Then update their visability...
+	this.updatePathSelection(this.lastSelectedLineType);
 };
 
 
@@ -154,6 +149,9 @@ DesignHandler.prototype.saveAllDesignsToFile = function(){
 	this.closeActiveDesign(); // So they are all on this.designs
 	var stPattern = new Pattern();
 	
+	for(var c = 0; c < this.designs.length; c++){
+		this.designs[c].prepForPrint();
+	}
 	
 	
 	// JUMP to the first stitch of this.designs if it exists
@@ -205,7 +203,7 @@ DesignHandler.prototype.saveAllDesignsToFile = function(){
 	console.log("Saved file to " + name);
 };
 
-DesignHandler.prototype.fillInStitchGapsAndAddStitchAbs = function(stPattern, scale, x, y, flags, color, threshold = 121){
+DesignHandler.prototype.fillInStitchGapsAndAddStitchAbs = function(stPattern, scale, x, y, flags, color, threshold){
 	var tempX = x;//*scale;
 	var tempY = y;//*scale;
 	

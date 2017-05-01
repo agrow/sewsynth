@@ -20,7 +20,7 @@ var CanvasHandler = function(canvasID){
 	this.drawingTool = new Tool();
 	this.drawingTool.minDistance = 3;
 	//this.activePath = null;
-	var path;
+	var path = null;
 	
 	this.drawingTool.onMouseDown = function(event){
 		//global.CanvasHandler.activePath = new Path();
@@ -28,7 +28,7 @@ var CanvasHandler = function(canvasID){
 		path.strokeColor = 'black';
 		path.add(event.point);
 		path.selected = true;
-		path.opacity = 0.5
+		path.opacity = 0.5;
 	};
 	
 	this.drawingTool.onMouseDrag = function(event){
@@ -40,6 +40,7 @@ var CanvasHandler = function(canvasID){
 		path.selected = false;
 		global.mainDesignHandler.makeAndSetNewDesign();
 		global.mainDesignHandler.addPaperJSPath(path);
+		
 		
 		//console.log("deselected", path);
 	};
