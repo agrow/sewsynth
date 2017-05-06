@@ -183,3 +183,19 @@ Design.prototype.calcDimensionsBasedOnPathPoints = function(){
 	this.dimensions.height = this.dimensions.bigY - this.dimensions.smallY;
 };
 
+
+////////////////////////////////////////////////////////////////////////
+/////// DESIGN GENERATION //////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+// Density: how closely stitches are made, resulting in something akin to satin or scribbles. 0-1
+// maxWidth: how wide from the origional design line we are allowed to go. pixels?
+// rateOfChange: How quickly the design runs through the func's changes
+// func: function of change, in this case noise, so func would likely be a random seed fed into perlinNoise
+Design.prototype.add1DNoise = function(density, maxWidth, rateOfChange, func){
+	
+};
+
+Design.prototype.add2DNoise = function(density, maxWidth, rateOfChange, variation, func1, func2){
+	
+};
