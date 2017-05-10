@@ -84,12 +84,12 @@ DesignHandler.prototype.addPaperJSPath = function(path){
 	//this.activeDesign.flattenedPath.flatten(1);
 	// Then apply some design xform
 	
-	this.activeDesign.parsePathToPoints(this.activeDesign.flattenedPath);
-	console.log("pathPoints from flattened path ", this.activeDesign.pathPoints.length);
+	//this.activeDesign.parsePathToPoints(this.activeDesign.flattenedPath);
+	//console.log("pathPoints from flattened path ", this.activeDesign.pathPoints.length);
 	
 	// Prep to print
-	this.activeDesign.roundPathPoints(); // Makes printing and sewing clearer/easier. BW was always in integers
-	this.activeDesign.calcDimensionsBasedOnPathPoints();
+	//this.activeDesign.roundPathPoints(); // Makes printing and sewing clearer/easier. BW was always in integers
+	//this.activeDesign.calcDimensionsBasedOnPathPoints();
 	// SHOULD BE DONE OUT OF HERE
 	//this.saveAllDesignsToFile();
 	// added to save button .click()
@@ -150,7 +150,7 @@ DesignHandler.prototype.saveAllDesignsToFile = function(){
 	var stPattern = new Pattern();
 	
 	for(var c = 0; c < this.designs.length; c++){
-		this.designs[c].prepForPrint();
+		this.designs[c].prepLineForPrint();
 	}
 	
 	
