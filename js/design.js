@@ -339,9 +339,9 @@ Design.prototype.generatePathAbsoluteToDesignLines = function(newPoints){
 		
 		// NOW WE ARE READY FOR ABSOLUTE PLACEMENT OF POINTS ON THE LINE!!!
 		if(i === 0)
-			this.generatedPathPoints = this.generatedPathPoints.concat(this.segmentToDesignLine(this.pathPoints[i], this.pathPoints[i+1], pointsToSend, true, false, true));
+			this.generatedPathPoints = this.generatedPathPoints.concat(this.segmentToDesignLineUsingRotation(this.pathPoints[i], this.pathPoints[i+1], pointsToSend, true, false, true));
 		else
-			this.generatedPathPoints = this.generatedPathPoints.concat(this.segmentToDesignLine(this.pathPoints[i], this.pathPoints[i+1], pointsToSend, false, false, true));
+			this.generatedPathPoints = this.generatedPathPoints.concat(this.segmentToDesignLineUsingRotation(this.pathPoints[i], this.pathPoints[i+1], pointsToSend, false, false, true));
 			
 			
 		// And finally, update distOnX for this segment so we can move on to the next...
@@ -432,9 +432,7 @@ Design.prototype.segmentToDesignLine = function(pt1, pt2, newPoints, incPt1, inc
 		console.log(i + " perp, scaled: " + perp + " by " + newPoints[i].y);
 		
 		drawer = drawer.add(perp); // offset on x and y based on scaled perp
-		if(slope === null){ // I have a feeling this may be an abs vs. relative issue, but we'll start here...
-			drawer.y = drawer.y + newPoints[i].x;
-		}
+
 		//console.log(i + " drawer: " + drawer.x + ", " + drawer.y);
 		output.push(drawer.clone()); // save the point in our stack
 		//console.log("--------------------------");
@@ -444,6 +442,68 @@ Design.prototype.segmentToDesignLine = function(pt1, pt2, newPoints, incPt1, inc
 	if(incPt2 === undefined || incPt2 === true){
 		output.push(pt2.clone());
 	}
+	
+	console.log("new points..." + output);
+	
+	return output;
+};
+
+// pt1 and pt2 are the start/end points of 1 straight line segment
+// newPoints is a list of new y values
+// incPt1 and Pt2: flags to use the start and endpoints. Default is true !!! may cause duplicate stitches !!!
+// absolute: a flag on whether the x in newPoints goes from 0-1, or whether it's an abs distance
+// returns: a list of points (newPoints) strung along the line between pt1 and pt2 (0-1? Or abs?) x: 0 to 1, y: abs? 0 to -1 * scale?
+Design.prototype.segmentToDesignLineUsingRotation = function(pt1, pt2, newPoints, incPt1, incPt2, absolute){
+	var lineVect = pt2.subtract(pt1);
+	console.log("pt2 - pt1", lineVect);
+	var lineVectNormal = lineVect.normalize();
+	console.log("normal " + lineVectNormal);
+	
+	var angleOfRotation = Math.atan2(lineVectNormal.y, lineVectNormal.x);//Math.acos(lineVectNormal.dot(flatLine));
+	console.log("segmentToDesignLineUsingRotation angle of Rotation: " + angleOfRotation);
+	
+	var dist = Math.sqrt((lineVect.y * lineVect.y) + (lineVect.x * lineVect.x));
+	
+	if(dist < 1){
+		console.log("segmentToDesignLine has a segment of length TOO SMALL: " + dist);
+		return [];
+	}
+
+	var output = [];
+	
+	if(incPt1 === undefined || incPt1 === true){
+		output.push(new Point(0,0));
+	}
+	
+	for(var i = 0; i < newPoints.length; i++){
+		output.push(newPoints[i].clone());
+	}
+	
+	if(incPt2 === undefined || incPt2 === true){
+		output.push(new Point(dist, 0));
+	}
+	
+	console.log("Output before rotation " + output);
+	
+	// Now we need to translate/rotate all these points to our line...
+	for(var i = 0; i < output.length; i++){
+		// Rotation, since we start relative to 0, 0 we don't need to move...
+		var oldX = output[i].x; // NEED TO SAVE so that calc of y is right
+		output[i].x = oldX * Math.cos(angleOfRotation) - output[i].y * Math.sin(angleOfRotation);
+		output[i].y = oldX * Math.sin(angleOfRotation) + output[i].y * Math.cos(angleOfRotation);
+		
+		
+	}
+	
+	console.log("Output after rotation " + output);
+	console.log("Translating.... " + pt1);
+	
+	for(var i = 0; i < output.length; i++){
+		
+		// Move to our first point now that we have rotated around the origin as it if was our first point
+		output[i] = output[i].add(pt1);
+	}
+	console.log("Output after translation " + output);
 	
 	console.log("new points..." + output);
 	
