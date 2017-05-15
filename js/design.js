@@ -305,7 +305,7 @@ Design.prototype.generatePathRelativeToDesignLines = function(newPoints){
 	this.designPath = new Path(this.generatedPathPoints); // an array of segments
 	this.designPath.strokeColor = 'blue';
 	this.designPath.opacity = 1;
-	console.log("this.designPath complete!", this.designPath);
+	console.log("this.designPath complete! " + this.designPath);
 	
 };
 
@@ -325,8 +325,8 @@ Design.prototype.generatePathAbsoluteToDesignLines = function(newPoints){
 		var distOfThisLineSegment = this.pathPoints[i].getDistance(this.pathPoints[i+1]);
 		// Grab all points between our current distOnX and the distance of this line segment + distOnX
 		for(var j = 0; j < newPoints.length; j++){
-			if(newPoints[j].x > distOnX && newPoints[j].x < (distOnX+distOfThisLineSegment)){
-				console.log("Point within distance requirements...[" + j + "] " + newPoints[j].x);
+			if(newPoints[j].x > distOnX && newPoints[j].x <= (distOnX+distOfThisLineSegment)){
+				console.log("Point within distance requirements...[" + j + "] " + newPoints[j]);
 				pointsToSend.push(newPoints[j]);
 			}
 		}
@@ -357,7 +357,7 @@ Design.prototype.generatePathAbsoluteToDesignLines = function(newPoints){
 	this.designPath = new Path(this.generatedPathPoints); // an array of segments
 	this.designPath.strokeColor = 'blue';
 	this.designPath.opacity = 1;
-	console.log("this.designPath complete!", this.designPath);
+	console.log("this.designPath complete! " + this.designPath);
 	
 };
 
@@ -374,15 +374,24 @@ Design.prototype.generatePathAbsoluteToDesignLines = function(newPoints){
 Design.prototype.segmentToDesignLine = function(pt1, pt2, newPoints, incPt1, incPt2, absolute){
 	var lineVect = pt2.subtract(pt1);
 	console.log("pt2 - pt1", lineVect);
+	var lineVectNormal = lineVect.normalize();
 	
 	var perp = new Point();
 	perp.x = lineVect.y;
 	perp.y = -lineVect.x;
 	// .normalize function not working, doing my own...
 	var dist = Math.sqrt((lineVect.y * lineVect.y) + (lineVect.x * lineVect.x));
+	
+	if(dist < 1){
+		console.log("segmentToDesignLine has a segment of length TOO SMALL: " + dist);
+		return [];
+	}
 
 	var slope = (pt2.y - pt1.y)/(pt2.x - pt1.x);
+	if(pt2.x === pt1.x) slope = null;
+	
 	var b = pt1.y - (slope * pt1.x);
+	if(slope === null) b = pt1.y;
 	//console.log("slope 1 / slope 2, " + (pt2.y-pt1.y) + " / " + (pt2.x-pt1.x));
 	
 	var output = [];
@@ -399,12 +408,18 @@ Design.prototype.segmentToDesignLine = function(pt1, pt2, newPoints, incPt1, inc
 		
 		//console.log("slope and b ", slope.toString(), b);
 		if(absolute === true){
-			drawer.x = drawer.x + newPoints[i].x; // not scaled by lineVect length because it already has a length
+			drawer.x = drawer.x + (lineVectNormal.x * newPoints[i].x);
+			drawer.y = drawer.y + (lineVectNormal.y * newPoints[i].y); 
+			// Ugh, this is going to need to be adjusted on the y too, huh?
 		} else {
 			drawer.x = drawer.x + (lineVect.x * newPoints[i].x); // scaled to length...
 		}
 		
 		drawer.y = (slope * drawer.x) + b;
+		if(slope === null) {
+			drawer.y = b;
+			console.log("slope === null; drawer.y = b instead " + b);
+		}
 		
 		//console.log(i + " drawer @ pt on line?: " + drawer.x + ", " + drawer.y);
 		
@@ -414,9 +429,12 @@ Design.prototype.segmentToDesignLine = function(pt1, pt2, newPoints, incPt1, inc
 		perp.x = lineVect.y/dist;
 		perp.y = -lineVect.x/dist;
 		perp = perp.multiply(newPoints[i].y); // scale
-		console.log(i + " perp, scaled: " + perp.x + ", " + perp.y + " by " + newPoints[i].y);
+		console.log(i + " perp, scaled: " + perp + " by " + newPoints[i].y);
 		
 		drawer = drawer.add(perp); // offset on x and y based on scaled perp
+		if(slope === null){ // I have a feeling this may be an abs vs. relative issue, but we'll start here...
+			drawer.y = drawer.y + newPoints[i].x;
+		}
 		//console.log(i + " drawer: " + drawer.x + ", " + drawer.y);
 		output.push(drawer.clone()); // save the point in our stack
 		//console.log("--------------------------");
@@ -427,7 +445,7 @@ Design.prototype.segmentToDesignLine = function(pt1, pt2, newPoints, incPt1, inc
 		output.push(pt2.clone());
 	}
 	
-	console.log("new points...", output);
+	console.log("new points..." + output);
 	
 	return output;
 };
