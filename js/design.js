@@ -31,6 +31,23 @@ var Design = function() {
 	return this;
 }; // Design
 
+////////////////////////////////////////////////////////////////////////
+/////// ACCESSORS //////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+Design.prototype.getFirstPoint = function(){
+	if(this.generatedPathPoints.length > 0)
+		return this.generatedPathPoints[0];
+	else 
+		return null;
+};
+
+Design.prototype.getPointsForPrinting = function(){
+	this.roundPathPoints();
+	this.calcDimensionsBasedOnPathPoints();
+	
+	return this.generatedPathPoints;
+};
+
 
 ////////////////////////////////////////////////////////////////////////
 /////// DESIGN PATHS WITH PAPERJS //////////////////////////////////////////////
@@ -116,7 +133,8 @@ Design.prototype.regeneratePaths = function(params){
 	// By this point, the default path has been set one way or another, or we forgot to set it ;)
 	this.generateSimplifiedPath(params);
 	this.generateFlattenedPath(params);
-	this.testRelativeDesign();
+	//this.testRelativeDesign();
+	this.testAbsSinDesign(0.3, 4);
 };
 
 Design.prototype.hideAndDeselectAllPaths = function(){
@@ -175,11 +193,6 @@ Design.prototype.generatePathPoints = function(path){
 	this.parsePathToPoints(path);
 	this.roundPathPoints();
 	
-}
-
-Design.prototype.prepLineForPrint = function() {
-	//this.generatePathPoints(this.flattenedPath);
-	this.calcDimensionsBasedOnPathPoints();
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -203,6 +216,18 @@ Design.prototype.calcDimensionsBasedOnPathPoints = function(){
 	this.dimensions.height = this.dimensions.bigY - this.dimensions.smallY;
 };
 
+Design.prototype.calcDistanceOfPathPoints = function(){
+	var totalDist = 0;
+	
+	// i < length -1 for i to i+1 distance...
+	for(var i = 0; i < this.pathPoints.length-1; i++){
+		totalDist += this.pathPoints[i].getDistance(this.pathPoints[i+1]);
+	}
+	
+	console.log("Total distance calculated ", totalDist);
+	return totalDist;
+};
+
 
 ////////////////////////////////////////////////////////////////////////
 /////// DESIGN GENERATION //////////////////////////////////////////////
@@ -221,23 +246,62 @@ Design.prototype.add2DNoise = function(density, maxWidth, rateOfChange, variatio
 };
 
 Design.prototype.testRelativeDesign = function(){
-	this.generatePathRelativeToDesignLines([new Point(.33, 1), new Point(.66, -1), new Point(1, 0)]);
+	this.generatePathPoints(this.flattenedPath); // Resets this.pathPoints to the recentPath.
+	
+	this.generatePathRelativeToDesignLines(this.scaleYPointPosition( [new Point(.33, 1), new Point(.66, -1)], 10));
 };
 
-Design.prototype.generatePathRelativeToDesignLines = function(newPoints){
-	this.generatePathPoints(this.flattenedPath);
+Design.prototype.testAbsSinDesign = function(sinSample, pointsDensity){
+	this.generatePathPoints(this.flattenedPath); // Resets this.pathPoints to the recentPath. Need to do this to get the right distance.
 	
+	var totalDistance = this.calcDistanceOfPathPoints();
+	var points = [];
+	
+	for(var i = 0; i <= totalDistance; i+= pointsDensity){
+		console.log("Generating point at " + i + ", " + Math.sin(sinSample*i));
+		points.push(new Point(i, Math.sin(sinSample*i)));
+	}
+	
+	this.generatePathAbsoluteToDesignLines(this.scaleYPointPosition(points, 10));
+};
+
+Design.prototype.testAbsNoiseDesign = function(pointsDensity){
+	
+};
+
+// Plan to make this a slider, so we gotta have a function apply it here...
+Design.prototype.scaleYPointPosition = function(pts, scale){
+	var newPoints = [];
+	for(var i = 0; i < pts.length; i++){
+		var pt = pts[i].clone();
+		pt.y = pt.y * scale;
+		newPoints.push(pt);
+	}
+	return newPoints;
+};
+
+//////////////////////////////////////////////////////////////////////////////
+//////////////// RELATIVE... /////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+Design.prototype.generatePathRelativeToDesignLines = function(newPoints){
+	console.log("generatePathRelativeToDesignLines " + newPoints);
 	this.generatedPathPoints = []; // hopefully we don't need to clean this out!
 	
 	// < length -1 because we are always dealing with i and i+1
 	for(var i = 0; i < this.pathPoints.length-1; i++){
 		if(i === 0)
-			this.generatedPathPoints = this.generatedPathPoints.concat(this.segmentToDesignLine(this.pathPoints[i], this.pathPoints[i+1], newPoints, true, false));
+			this.generatedPathPoints = this.generatedPathPoints.concat(this.segmentToDesignLine(this.pathPoints[i], this.pathPoints[i+1], newPoints, true, false, false));
 		else
-			this.generatedPathPoints = this.generatedPathPoints.concat(this.segmentToDesignLine(this.pathPoints[i], this.pathPoints[i+1], newPoints, false, false));
+			this.generatedPathPoints = this.generatedPathPoints.concat(this.segmentToDesignLine(this.pathPoints[i], this.pathPoints[i+1], newPoints, false, false, false));
 	}
 	console.log("generatedPathPoints!", this.generatedPathPoints);
 	
+	// Remove any previous lines that have been made/drawn...
+	if(this.designPath !== null) {
+		this.designPath.remove();
+		this.designPath = null;
+	}
 	this.designPath = new Path(this.generatedPathPoints); // an array of segments
 	this.designPath.strokeColor = 'blue';
 	this.designPath.opacity = 1;
@@ -245,19 +309,81 @@ Design.prototype.generatePathRelativeToDesignLines = function(newPoints){
 	
 };
 
+
+/////////////////////////////////////////////////////////////////////////
+////////////////// ABS Functions ///////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+
+Design.prototype.generatePathAbsoluteToDesignLines = function(newPoints){	
+	this.generatedPathPoints = []; // hopefully we don't need to clean this out!
+	
+	var distOnX = 0; // need to keep track so we know how far to progress each point
+	
+	// < length -1 because we are always dealing with i and i+1
+	for(var i = 0; i < this.pathPoints.length-1; i++){
+		var pointsToSend = [];
+		var distOfThisLineSegment = this.pathPoints[i].getDistance(this.pathPoints[i+1]);
+		// Grab all points between our current distOnX and the distance of this line segment + distOnX
+		for(var j = 0; j < newPoints.length; j++){
+			if(newPoints[j].x > distOnX && newPoints[j].x < (distOnX+distOfThisLineSegment)){
+				console.log("Point within distance requirements...[" + j + "] " + newPoints[j].x);
+				pointsToSend.push(newPoints[j]);
+			}
+		}
+		
+		// At this point, pointsToSend should have a list of points using abs distance.
+		// Now, subtract the distance we've already traveled so we have only the distance needed for this segment...
+		for(var j = 0; j < pointsToSend.length; j++){
+			pointsToSend[j].x = pointsToSend[j].x - distOnX; // We know this will be > 0 because x had to be > distOnX before
+		}
+		
+		// NOW WE ARE READY FOR ABSOLUTE PLACEMENT OF POINTS ON THE LINE!!!
+		if(i === 0)
+			this.generatedPathPoints = this.generatedPathPoints.concat(this.segmentToDesignLine(this.pathPoints[i], this.pathPoints[i+1], pointsToSend, true, false, true));
+		else
+			this.generatedPathPoints = this.generatedPathPoints.concat(this.segmentToDesignLine(this.pathPoints[i], this.pathPoints[i+1], pointsToSend, false, false, true));
+			
+			
+		// And finally, update distOnX for this segment so we can move on to the next...
+		distOnX += distOfThisLineSegment;
+	}
+	console.log("generatedPathPoints!", this.generatedPathPoints);
+	
+	// Remove any previous lines that have been made/drawn...
+	if(this.designPath !== null) {
+		this.designPath.remove();
+		this.designPath = null;
+	}
+	this.designPath = new Path(this.generatedPathPoints); // an array of segments
+	this.designPath.strokeColor = 'blue';
+	this.designPath.opacity = 1;
+	console.log("this.designPath complete!", this.designPath);
+	
+};
+
+
+/////////////////////////////////////////////////////////////////////////
+///////////////// Works for both...
+////////////////////////////////////////////////////////////////////////////
+
 // pt1 and pt2 are the start/end points of 1 straight line segment
 // newPoints is a list of new y values
 // incPt1 and Pt2: flags to use the start and endpoints. Default is true !!! may cause duplicate stitches !!!
+// absolute: a flag on whether the x in newPoints goes from 0-1, or whether it's an abs distance
 // returns: a list of points (newPoints) strung along the line between pt1 and pt2 (0-1? Or abs?) x: 0 to 1, y: abs? 0 to -1 * scale?
-Design.prototype.segmentToDesignLine = function(pt1, pt2, newPoints, incPt1, incPt2){
+Design.prototype.segmentToDesignLine = function(pt1, pt2, newPoints, incPt1, incPt2, absolute){
 	var lineVect = pt2.subtract(pt1);
 	console.log("pt2 - pt1", lineVect);
 	
 	var perp = new Point();
-	
+	perp.x = lineVect.y;
+	perp.y = -lineVect.x;
+	// .normalize function not working, doing my own...
+	var dist = Math.sqrt((lineVect.y * lineVect.y) + (lineVect.x * lineVect.x));
+
 	var slope = (pt2.y - pt1.y)/(pt2.x - pt1.x);
 	var b = pt1.y - (slope * pt1.x);
-	console.log("slope 1 / slope 2, " + (pt2.y-pt1.y) + " / " + (pt2.x-pt1.x));
+	//console.log("slope 1 / slope 2, " + (pt2.y-pt1.y) + " / " + (pt2.x-pt1.x));
 	
 	var output = [];
 	var drawer = null;
@@ -269,32 +395,31 @@ Design.prototype.segmentToDesignLine = function(pt1, pt2, newPoints, incPt1, inc
 	for(var i = 0; i < newPoints.length; i++){
 		// move drawer from pt1 to newPoints[i] by the slope along lineVect
 		drawer = pt1.clone();
-		console.log(i + " pt1: " + drawer.x + ", " + drawer.y);
+		//console.log(i + " pt1: " + drawer.x + ", " + drawer.y);
 		
-		console.log("slope and b ", slope.toString(), b);
-		drawer.x = drawer.x + (lineVect.x * newPoints[i].x);
+		//console.log("slope and b ", slope.toString(), b);
+		if(absolute === true){
+			drawer.x = drawer.x + newPoints[i].x; // not scaled by lineVect length because it already has a length
+		} else {
+			drawer.x = drawer.x + (lineVect.x * newPoints[i].x); // scaled to length...
+		}
+		
 		drawer.y = (slope * drawer.x) + b;
 		
-		console.log(i + " drawer @ pt on line?: " + drawer.x + ", " + drawer.y);
+		//console.log(i + " drawer @ pt on line?: " + drawer.x + ", " + drawer.y);
 		
 		// This gets us where we would be on the line
 		// Now we use the offset in newPoints to go up/down along the perpendicular vector
-		perp.x = lineVect.y;
-		perp.y = -lineVect.x;
 		// .normalize function not working, doing my own...
-		var dist = Math.sqrt((perp.x * perp.x) + (perp.y * perp.y));
-		perp.x = perp.x/dist;
-		perp.y = perp.y/dist;
-		//perp.normalize(1);
-		
-		console.log(i + " perp, normalized: " + perp.x + ", " + perp.y);
-		perp.multiply(newPoints[i].y); // scale
+		perp.x = lineVect.y/dist;
+		perp.y = -lineVect.x/dist;
+		perp = perp.multiply(newPoints[i].y); // scale
 		console.log(i + " perp, scaled: " + perp.x + ", " + perp.y + " by " + newPoints[i].y);
 		
-		drawer.add(perp); // offset on x and y based on scaled perp
-		console.log(i + " drawer: " + drawer.x + ", " + drawer.y);
+		drawer = drawer.add(perp); // offset on x and y based on scaled perp
+		//console.log(i + " drawer: " + drawer.x + ", " + drawer.y);
 		output.push(drawer.clone()); // save the point in our stack
-		console.log("--------------------------");
+		//console.log("--------------------------");
 	}
 	
 	// Also should/could check if first/last newPoints's x is 0 or 1.
@@ -306,5 +431,3 @@ Design.prototype.segmentToDesignLine = function(pt1, pt2, newPoints, incPt1, inc
 	
 	return output;
 };
-
-

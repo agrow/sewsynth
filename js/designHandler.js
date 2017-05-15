@@ -110,8 +110,12 @@ DesignHandler.prototype.updatePathSelection = function(selected){
 	
 	// do it for the active design as well
 	// Deselect...
-	this.activeDesign.hideAndDeselectAllPaths();
-	this.activeDesign.showAndSelectPath(selected);
+	if(this.activeDesign !== null){
+		this.activeDesign.hideAndDeselectAllPaths();
+		this.activeDesign.showAndSelectPath(selected);
+	} else {
+		console.log("Cannot update selection for a null activeDesign...");
+	}
 };
 
 DesignHandler.prototype.regenerateAllDerivedPaths = function(inputParams){
@@ -135,10 +139,10 @@ DesignHandler.prototype.regenerateAllDerivedPaths = function(inputParams){
 		//this.designs[i].prepForPrint(); // honestly should just be done when we're printing...
 	}
 	
-	// do it for the active design as well
-	this.activeDesign.regeneratePaths(params);
-	//this.activeDesign.prepForPrint();  // honestly should just be done when we're printing...
-	
+	if(this.activeDesign !== null){
+	// do it for the active design as well, if it's not null...
+		this.activeDesign.regeneratePaths(params);
+	}
 	// Then update their visability...
 	this.updatePathSelection(this.lastSelectedLineType);
 };
@@ -149,33 +153,31 @@ DesignHandler.prototype.saveAllDesignsToFile = function(){
 	this.closeActiveDesign(); // So they are all on this.designs
 	var stPattern = new Pattern();
 	
-	for(var c = 0; c < this.designs.length; c++){
-		this.designs[c].prepLineForPrint();
-	}
-	
-	
 	// JUMP to the first stitch of this.designs if it exists
-	if(this.designs.length > 0 && this.designs[0].pathPoints.length > 0){
-		var firstStitch = this.designs[0].pathPoints[0];
+	if(this.designs.length > 0 && this.designs[0].getFirstPoint() !== null){
+		var firstStitch = this.designs[0].getFirstPoint();
 		stPattern.addStitchAbs(firstStitch.x*this.scale, firstStitch.y*this.scale, stitchTypes.jump, true);
 		//this.fillInStitchGapsAndAddStitchAbs(stPattern, this.scale, firstStitch.x, firstStitch.y, stitchTypes.jump, true, this.threshold);
 	} else {
 		// There are no points in the first design?! WTF?!
 		// gotta add an anchor point,this will be at the upper left?
 		stPattern.addStitchAbs(0, 0, stitchTypes.jump, true);
+		console.err("FIRST DESIGN HAS NO STITCHES!!!");
 	}
 	
 	// For each old design, in order, stitch them out jumping between each
 	for(var i = 0; i < this.designs.length; i++){
+		var pathPoints = this.designs[i].getPointsForPrinting();
+		
 		// For each point in this design, stitch to there!
-		for(var j = 0; j < this.designs[i].pathPoints.length; j++){
-			var point = this.designs[i].pathPoints[j];
+		for(var j = 0; j < pathPoints.length; j++){
+			var point = pathPoints[j];
 			this.fillInStitchGapsAndAddStitchAbs(stPattern, this.scale, point.x, point.y, stitchTypes.normal, true, this.threshold);
 		}
 		// If there are more designs after this one...
 		if(i < this.designs.length-1) {
 			// JUMP from the last stitch of this design to the last stitch of the next
-			var firstStitch = this.designs[i+1].pathPoints[0];
+			var firstStitch = this.designs[i+1].getFirstPoint();
 			this.fillInStitchGapsAndAddStitchAbs(stPattern, this.scale, firstStitch.x, firstStitch.y, stitchTypes.jump, true, this.threshold);
 		}
 	}
