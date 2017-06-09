@@ -79,6 +79,7 @@ div {
 	width: 200px;
 	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.6), 0 6px 10px 0 rgba(0, 0, 0, 0.6);
 	position:absolute;
+	overflow:hidden;
 	
 	-webkit-transition: width .5s, height .5s; /* Safari */
     transition: width .5s, height .5s;

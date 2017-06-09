@@ -80,6 +80,7 @@ var moveMenu = function(ID, toX, toY){
 var updateMenuPositions = function(){
 	moveMenu("view_options", $("#hundred").width()-$("#view_options").outerWidth(true), 0);
 	moveMenu("print", 0, $("#hundred").height()-$("#print").outerHeight(true));
+	moveMenu("image_options", $("#design_options").outerWidth() + 5, 0);
 };
 
 ////////////////////////////////////////////////
@@ -89,6 +90,7 @@ var initilizeMenus = function(){
 	// Menus should, on enter and exit, show/hide their content.
 	// !!! NOTE: Make sure IDs match in this function! And in main's global! !!!
 	setupMenu("design_options");
+	setupMenu("image_options");
 	setupMenu("view_options");
 	
 	// Line simplifier function slider //#lineSimplifierTolerance
@@ -107,7 +109,7 @@ var initilizeMenus = function(){
 	$("#radio-3").prop('checked', true);
 	$( "input[type='radio']" ).checkboxradio().on("change", function(e){ global.mainDesignHandler.updatePathSelection($( e.target ).val()); });
 	//(v this hides the radio selector)
-	updateMenuVisibilityContents(["design_options", "view_options"]);
+	updateMenuVisibilityContents(["design_options", "view_options", "image_options"]);
 	
 	// BUTTONS!
 	// This one is not invisible, so we just add it manually and let it float...

@@ -9,6 +9,7 @@ var global = {
 	// GUIelements, not necessary to put them here, but helpful to know what's up
 	design_options: {visible: false},
 	view_options: {visible: false},
+	image_options: {visible: false},
 };
 
 var saveCalculatedDimensions = function(){
