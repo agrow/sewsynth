@@ -12,6 +12,18 @@ var global = {
 	image_options: {visible: false},
 };
 
+if (!window.FileReader) {
+    message = '<p>The ' +
+              '<a href="http://dev.w3.org/2006/webapi/FileAPI/" target="_blank">File API</a>s ' +
+              'are not fully supported by this browser.</p>' +
+              '<p>Upgrade your browser to the latest version.</p>';
+
+    document.querySelector('body').innerHTML = message;
+} else {
+	document.getElementById('uploadImg').addEventListener('change', handleFileSelection, false);
+
+}
+
 var saveCalculatedDimensions = function(){
 	global.calcHeight = $("#mainDiv").height();
 	global.calcWidth = $("#mainDiv").width();
@@ -44,6 +56,39 @@ window.addEventListener("resize", function(){
 	// move menus
 	updateMenuPositions();
 });
+
+
+function handleFileSelection(evt) {
+    evt.stopPropagation();
+    evt.preventDefault();
+
+    var files = evt.dataTransfer ? evt.dataTransfer.files : evt.target.files;
+
+    if (!files) {
+      alert("<p>At least one selected file is invalid - do not select any folders.</p><p>Please reselect and try again.</p>");
+      return;
+    }
+
+    for (var i = 0, file; file = files[i]; i++) {
+      if (!file) {
+            alert("Unable to access " + file.name); 
+            continue;
+      }
+      if (file.size == 0) {
+            alert("Skipping " + file.name.toUpperCase() + " because it is empty.");
+            continue;
+      }
+      global.mainCanvasHandler.loadUserImage(file);
+    }
+}
+
+
+
+function displayFileImg(filename, evt) {
+    var view = new jDataView(evt.target.result, 0, evt.size);
+ 
+}
+
 
 $( document ).ready(function() {
 	// Import the rest of the functions
