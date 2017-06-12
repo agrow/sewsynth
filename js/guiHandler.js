@@ -103,6 +103,12 @@ var initilizeMenus = function(){
 															change: function(event, ui){ global.mainDesignHandler.regenerateAllDerivedPaths(); },
 															slide: function(event, ui){ global.mainDesignHandler.regenerateAllDerivedPaths(); } });
 	
+	addSliderToGUI("image_options", "edgeThreshold", "Edge Detection Threshold", {
+															min: 0, max: 300, step: 1, value:100,
+															change: function(event, ui){ global.mainCanvasHandler.reloadImageFromGUI(); },
+															slide: function(event, ui){ global.mainCanvasHandler.reloadImageFromGUI(); } });
+	
+	
 	
 	// Radio button selectors 
 	// Set default checked, matches default in designHandler...
