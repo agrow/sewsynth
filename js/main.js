@@ -3,7 +3,6 @@ var global = {
 	mainDesignHandler: null,
 	calcHeight: 0,
 	calcWidth: 0,
-	scale: 1, // May be modified to change zoom/scale of drawing designs
 	designCount: 0,
 	pointCount: 0,
 	// GUIelements, not necessary to put them here, but helpful to know what's up

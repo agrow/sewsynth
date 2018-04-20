@@ -1,4 +1,8 @@
+// !!!!!! TODO: Most of this should be moved to designPath.js
+// !!!!!!  So we can have multiple paths in one design...
+
 var Design = function() {
+	this.verbose = false;
 	this.id = global.designCount++;
 	this.pointCount = 0;
 	this.dimensions = {smallX: 999999, bigX: -999999, 
@@ -17,23 +21,69 @@ var Design = function() {
 	
 	// By Location // TO DO LATER, IF IT'S USEFUL //
 	//this.pointsMapByLocation = [];
+
+		// TO DO: USE THIS INSTEAAAAD!
+	this.paths = {
+		"defaultPath": null,
+		"simplifiedPath": null,
+		"flatteenedPath": null,
+		"designPath": null,
+		"sewnFlattenedPath": null,
+		"sewnDesignPath": null, 
+	}
+
+	// Used to determine which paths should be made dirty when a change gets made higher up the dependency chain
+	// use recusion to hit all children down the tree
+	this.pathDependents = {
+		"defaultPath" : ["simplifiedPath"],
+		"simplifiedPath" : ["flattenedPath"],
+		"flattenedPath": ["designPath","sewnFlattenedPath" ],
+		"designPath": ["sewnDesignPath"],
+		"sewnFlattenedPath": [],
+		"sewnDesignPath": [], 
+	};
+	// TO DO: USE THIS (correspends with path item #) to detect when to re-generate paths 
+	// further down the chain when they are needed
+	this.dirty = [true, true, true, true, true, true];
 	
 	// For drawing/canvas vis
 	this.defaultPath = null;
 	this.simplifiedPath = null;
-	this.flattenedPath = null;
+	this.flattenedPath = null; // aka "segmentedPath" in the GUI
 	this.designPath = null;
+	this.sewnFlattenedPath = null;
+	this.sewnDesignPath = null;
+
+	this.stitchLengthMM = 2;
+	this.pixelsPerMM = 10;
+	// this is a MAX length. any uneven length is distributed between the ceiling of the division
+	this.stitchLengthPixels = undefined;
+	this.setSewnStitchLength(this.stitchLengthMM, this.pixelsPerMM);
 	
-	// JANK-FAST PRINTING
+	// JANK-FAST PRINTING!! The Path sent from the canvas is directly fed into the default path and beyond
 	this.pathPoints = [];
 	this.generatedPathPoints = [];
 	
 	return this;
 }; // Design
 
+// stitchLength is in mm
+// pixelsPerMM is the screen -> stitchLength scale conversion
+// pixelsPerMM should always be a number >1 (otherwise jesus how tiny is this path/screen? Oh, but that's an idea....)
+Design.prototype.setSewnStitchLength = function(stitchLengthMM, pixelsPerMM){
+	this.stitchLengthMM = stitchLengthMM;
+	this.pixelsPerMM = pixelsPerMM;
+
+	this.stitchLengthPixels = stitchLengthMM * pixelsPerMM; 
+
+	console.log("Stitch Length Properties Set: " + this.stitchLengthMM + " * " + this.pixelsPerMM + " = " + this.stitchLengthPixels);
+}
+
 ////////////////////////////////////////////////////////////////////////
 /////// ACCESSORS //////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
+///// TODO: Instead of having different functions for each, use the this.paths
+
 Design.prototype.getFirstPoint = function(){
 	if(this.generatedPathPoints.length > 0)
 		return this.generatedPathPoints[0];
@@ -46,6 +96,16 @@ Design.prototype.getPointsForPrinting = function(){
 	this.calcDimensionsBasedOnPathPoints();
 	
 	return this.generatedPathPoints;
+};
+
+Design.prototype.getSewnFlattenedPath = function(){
+	// Make sure the flattened path is ready
+	return this.sewnFlattenedPath;
+};
+
+Design.prototype.getSewnDesignPath = function(){
+	// Make sure the designPath has been translated
+	return this.sewnDesignPath;
 };
 
 
@@ -80,6 +140,7 @@ Design.prototype.generateSimplifiedPath = function(params){
 	
 	if(params === undefined || params.tolerance === undefined){
 		console.log("using default path settings in generateSimplifidPath", params);
+		// Part of Paper.js
 		this.simplifiedPath.simplify();
 	} else {
 		this.simplifiedPath.simplify(params.tolerance);
@@ -88,6 +149,7 @@ Design.prototype.generateSimplifiedPath = function(params){
 
 // Should be called on simplifiedPath, uses params.flatten
 Design.prototype.generateFlattenedPath = function(params){	
+	// Check dependencies
 	if(this.defaultPath === null){
 		console.err("Should not be calling generateFlattenedPath without a defaultPath");
 		return;
@@ -98,6 +160,7 @@ Design.prototype.generateFlattenedPath = function(params){
 		return;
 	}
 	
+	// clean up old, dirty path
 	if(this.flattenedPath !== null){
 		this.flattenedPath.remove();
 		this.flattenedPath = null;
@@ -107,11 +170,48 @@ Design.prototype.generateFlattenedPath = function(params){
 	
 	if(params === undefined || params.flatness === undefined){
 		console.log("using default path settings in generateFlattenedPath");
+		//  Part of Paper.js
 		this.flattenedPath.flatten(); // default is 2.5, maximum error
 	} else {
 		this.flattenedPath.flatten(params.flatness);
 	}
 };
+
+// Should be called after generatedFlattenedPath
+// Plots points stitchLength in pixels, preserving the start and end points especially
+Design.prototype.generateSewnFlattenedPath = function(params){
+	// Check dependencies (should be programmatic)
+	if(this.defaultPath === null){
+		console.err("Should not be calling generateSewnFlattenedPath without a defaultPath");
+		return;
+	}
+	
+	if(this.simplifiedPath === null){
+		console.err("Should not be calling generateSewnFlattenedPath without a simplifiedPath");
+		return;
+	}
+
+	if(this.flattenedPath === null){
+		console.err("Should not be calling generateSewnFlattenedPath without a flattenedPath");
+		return;
+	}
+
+	// Clean up old, dirty path (should be programmatic)
+	if(this.sewnFlattenedPath !== null){
+		this.sewnFlattenedPath.remove();
+		this.sewnFlattenedPath = null;
+	}
+
+	this.sewnFlattenedPath = new Path(this.plotPathPointsOnDistance(this.flattenedPath));
+	this.sewnFlattenedPath.strokeColor = 'blue';
+	this.sewnFlattenedPath.opacity = 1;
+	console.log("generatedToSewnFlattenedPath complete with length " + this.sewnFlattenedPath.segments.length);
+};
+
+
+///////////////////////////////////////////////////////////////////////////////////////
+//////////// Helpers for Path Translation /////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
 
 // Make sure to update/set visability after calling this function!
 Design.prototype.regeneratePaths = function(params){
@@ -133,9 +233,91 @@ Design.prototype.regeneratePaths = function(params){
 	// By this point, the default path has been set one way or another, or we forgot to set it ;)
 	this.generateSimplifiedPath(params);
 	this.generateFlattenedPath(params);
+	this.generateSewnFlattenedPath(params);
 	this.testRelativeDesign();
 	//this.testAbsSinDesign(0.3, 4);
 };
+
+// Returns: a new list of points that are based on the input path, with points placed
+// the sewn distance by pixels apart as a max goal. May be shortened in order to
+// conserve endpoints on the segments (every point on the path is a sewn position)
+// TODO: relaxation settings should allow us to round off points based on an allowance
+// 		Doesn't Paper.js do this? Should this be just done on the design path directly?
+// 
+Design.prototype.plotPathPointsOnDistance = function(path){
+	if(path == null){
+		console.err("Cannot plotPathPointsOnDistance for a null path");
+		return;
+	}
+	if(path.length <= 1){
+		console.err("Cannot plotPathPointsOnDistance for a path of 0 or 1 points", path);
+		return;
+	}
+	var plottedPoints = [];
+	console.log("plotting", path);
+	console.log("Path length // this.stitchLengthPixels", path.length, this.stitchLengthPixels);
+	var numPoints = Math.ceil(path.length/this.stitchLengthPixels); // Makes sure all is <= stitchLengthPixels
+	console.log("fits # of points (without endpoint)", numPoints);
+
+	// loops for numPoints+1 for the endpoint, which should be at offset = path.length (i and numPoints cancel each other out)
+	for(var i = 0; i <= numPoints; i++){
+		var offset = (path.length/numPoints) * i;
+		var point = path.getPointAt(offset);
+		console.log("Plotted point 1 by offset", i, offset, point);
+		plottedPoints.push(point);
+	}
+
+	/* // DOING IT BY HAND IS FOR SUCKERS
+	// Loop through every pair of points, working with current point and next point,
+	// plotting on the first point and filling in from there for each pair,
+	// taking a special case for add the last point in the last pair
+	for(var i = 0; i < path.segments.length-1; i++){
+		//console.log(path.getPointAt(0));
+		var startPoint = path.segments[i].point.clone();
+		var endPoint = path.segments[i+1].point.clone();
+		var vector = startPoint.subtract(endPoint);
+
+		console.log("start, end IDs:", i, i+1);
+		console.log("start, end:", startPoint, endPoint);
+		
+		console.log("vector:", vector);
+		vector = vector.normalize();
+		console.log("normalized vector: ", vector);
+
+		//plottedPoints.push(startPoint.clone()); // not a special case actually
+		var distance = startPoint.getDistance(endPoint);
+		//console.log(this.stitchLengthPixels);
+		// Without .ceiling, if we distributed the stitch, their length would be > this.stitchLengthPixels (our max)
+		var numStitchesFit = Math.ceil(distance/this.stitchLengthPixels); // distance / pixels = number of stitch, a whole number
+		var distPerStitch = distance/numStitchesFit; // stitch per number of stitches distributed again among total distance
+		console.log("total distance, numStitchesFit, distance per stitch", distance,numStitchesFit, distPerStitch);
+
+		for(var j = 0; j < numStitchesFit; j++){
+			var pt = startPoint.clone();
+			// new position = pt + (distPerStitch*vector)*(j+1)
+			console.log("distance from start point", (distPerStitch * j));
+			console.log("scaled by normal vector", vector.multiply(distPerStitch * j))
+			pt = pt.add(vector.multiply(distPerStitch * j)); // 0 at first stitch stitches at start, onward...
+			// save it
+			plottedPoints.push(pt.clone());
+			console.log("plotting point j", j, pt);
+		}
+
+		// sew the last position
+		if(i == path.segments.length -2){
+			plottedPoints.push(endPoint.clone());
+			console.log("Ending path at ", endPoint);
+			console.log("=========================================");
+		}
+	}
+	*/
+	console.log("plotted sewn points on disance", plottedPoints);
+	return plottedPoints;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
+//////////// UI on the Paths //////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
 
 Design.prototype.hideAndDeselectAllPaths = function(){
 	if(this.defaultPath !== null){
@@ -154,8 +336,17 @@ Design.prototype.hideAndDeselectAllPaths = function(){
 		this.designPath.selected = false;
 		this.designPath.visible = false;
 	}
+	if(this.sewnDesignPath !== null){
+		this.sewnDesignPath.selected = false;
+		this.sewnDesignPath.visible = false;
+	}
+	if(this.sewnFlattenedPath !== null){
+		this.sewnFlattenedPath.selected = false;
+		this.sewnFlattenedPath.visible = false;
+	}
 };
 
+// These strings are set in INDEX.HTML WHAT?!
 Design.prototype.showAndSelectPath = function(selected){
 	if(selected === "path-complex"){
 		this.defaultPath.selected = true;
@@ -169,6 +360,12 @@ Design.prototype.showAndSelectPath = function(selected){
 	} else if (selected === "path-design"){
 		this.designPath.selected = true;
 		this.designPath.visible = true;
+	} else if (selected === "path-sew-segmented"){
+		this.sewnFlattenedPath.selected = true
+		this.sewnFlattenedPath.visible = true;
+	} else if (selected === "path-sew-generated"){
+		this.sewnDesignPath.selected = true;
+		this.sewnDesignPath.visible = true;
 	} else {
 		// Haha! It's none of them!
 		console.log("Called showAndSelectPath on a design with selected", selected);
@@ -186,6 +383,7 @@ Design.prototype.parsePathToPoints = function(path){
 		this.pathPoints.push(path.segments[i].point.clone());
 	}
 	
+	// DIRTY!!!! EVERYTHING IS DIRTY!
 	console.log(this.pathPoints);
 };
 
@@ -224,7 +422,7 @@ Design.prototype.calcDistanceOfPathPoints = function(){
 		totalDist += this.pathPoints[i].getDistance(this.pathPoints[i+1]);
 	}
 	
-	console.log("Total distance calculated ", totalDist);
+	if(this.verbose) console.log("Total distance calculated ", totalDist);
 	return totalDist;
 };
 
@@ -248,7 +446,7 @@ Design.prototype.add2DNoise = function(density, maxWidth, rateOfChange, variatio
 Design.prototype.testRelativeDesign = function(){
 	this.generatePathPoints(this.flattenedPath); // Resets this.pathPoints to the recentPath.
 	
-	this.generatePathRelativeToDesignLines(this.scaleYPointPosition( [new Point(.33, 1), new Point(.66, -1)], 10));
+	this.generatePathRelativeToDesignLines(this.scaleYPointPosition( [new Point(.33, 1), new Point(.66, -1)], 50));
 };
 
 Design.prototype.testAbsSinDesign = function(sinSample, pointsDensity){
@@ -258,7 +456,7 @@ Design.prototype.testAbsSinDesign = function(sinSample, pointsDensity){
 	var points = [];
 	
 	for(var i = 0; i <= totalDistance; i+= pointsDensity){
-		console.log("Generating point at " + i + ", " + Math.sin(sinSample*i));
+		if(this.verbose) console.log("Generating point at " + i + ", " + Math.sin(sinSample*i));
 		points.push(new Point(i, Math.sin(sinSample*i)));
 	}
 	
@@ -295,7 +493,7 @@ Design.prototype.generatePathRelativeToDesignLines = function(newPoints){
 		else
 			this.generatedPathPoints = this.generatedPathPoints.concat(this.segmentToDesignLineRelative(this.pathPoints[i], this.pathPoints[i+1], newPoints, false, false));
 	}
-	console.log("generatedPathPoints!", this.generatedPathPoints);
+	if(this.verbose) console.log("generatedPathPoints!", this.generatedPathPoints);
 	
 	// Remove any previous lines that have been made/drawn...
 	if(this.designPath !== null) {
@@ -347,7 +545,7 @@ Design.prototype.generatePathAbsoluteToDesignLines = function(newPoints){
 		// And finally, update distOnX for this segment so we can move on to the next...
 		distOnX += distOfThisLineSegment;
 	}
-	console.log("generatedPathPoints!", this.generatedPathPoints);
+	if(this.verbose) console.log("generatedPathPoints!", this.generatedPathPoints);
 	
 	// Remove any previous lines that have been made/drawn...
 	if(this.designPath !== null) {
@@ -387,12 +585,12 @@ Design.prototype.segmentToDesignLineRelative = function(pt1, pt2, newPoints, inc
 // returns: a list of points (newPoints) strung along the line between pt1 and pt2 (0-1? Or abs?) x: 0 to 1, y: abs? 0 to -1 * scale?
 Design.prototype.segmentToDesignLineUsingRotation = function(pt1, pt2, newPoints, incPt1, incPt2, absolute){
 	var lineVect = pt2.subtract(pt1);
-	console.log("pt2 - pt1", lineVect);
+	if(this.verbose) console.log("pt2 - pt1", lineVect);
 	var lineVectNormal = lineVect.normalize();
-	console.log("normal " + lineVectNormal);
+	if(this.verbose) console.log("normal " + lineVectNormal);
 	
 	var angleOfRotation = Math.atan2(lineVectNormal.y, lineVectNormal.x);//Math.acos(lineVectNormal.dot(flatLine));
-	console.log("segmentToDesignLineUsingRotation angle of Rotation: " + angleOfRotation);
+	if(this.verbose) console.log("segmentToDesignLineUsingRotation angle of Rotation: " + angleOfRotation);
 	
 	var dist = Math.sqrt((lineVect.y * lineVect.y) + (lineVect.x * lineVect.x));
 	
@@ -415,7 +613,7 @@ Design.prototype.segmentToDesignLineUsingRotation = function(pt1, pt2, newPoints
 		output.push(new Point(dist, 0));
 	}
 	
-	console.log("Output before rotation " + output);
+	if(this.verbose) console.log("Output before rotation " + output);
 	
 	// Now we need to translate/rotate all these points to our line...
 	for(var i = 0; i < output.length; i++){
@@ -427,17 +625,17 @@ Design.prototype.segmentToDesignLineUsingRotation = function(pt1, pt2, newPoints
 		
 	}
 	
-	console.log("Output after rotation " + output);
-	console.log("Translating.... " + pt1);
+	if(this.verbose) console.log("Output after rotation " + output);
+	if(this.verbose) console.log("Translating.... " + pt1);
 	
 	for(var i = 0; i < output.length; i++){
 		
 		// Move to our first point now that we have rotated around the origin as it if was our first point
 		output[i] = output[i].add(pt1);
 	}
-	console.log("Output after translation " + output);
+	if(this.verbose) console.log("Output after translation " + output);
 	
-	console.log("new points..." + output);
+	if(this.verbose) console.log("new points..." + output);
 	
 	return output;
 };

@@ -97,20 +97,29 @@ var initilizeMenus = function(){
 	addSliderToGUI("design_options", "lineSimplifierTolerance", "Line Simplifier Tolerance", {
 															min: .1, max: 5, step: .1, value:2.5,
 															change: function(event, ui){ global.mainDesignHandler.regenerateAllDerivedPaths(); },
-															slide: function(event, ui){ global.mainDesignHandler.regenerateAllDerivedPaths(); } });
+															slide: function(event, ui){ global.mainDesignHandler.regenerateAllDerivedPaths(); } 
+	});
 	addSliderToGUI("design_options", "lineFlatness", "Line Flatten Allowed Error", {
 															min: .5, max: 15, step: .5, value:2.5,
 															change: function(event, ui){ global.mainDesignHandler.regenerateAllDerivedPaths(); },
-															slide: function(event, ui){ global.mainDesignHandler.regenerateAllDerivedPaths(); } });
+															slide: function(event, ui){ global.mainDesignHandler.regenerateAllDerivedPaths(); } 
+	});
+	addSliderToGUI("design_options", "stitchLength", "Stitch Length in mm", {
+															min: 1, max: 2, step: .2, value: 1.6,
+															change: function(event, ui) { global.mainDesignHandler.regenerateAllDerivedPaths(); },
+															slide: function(event, ui) { global. mainDesignHandler.regenerateAllDerivedPaths(); }
+
+	});
 	
 	addSliderToGUI("image_options", "edgeThreshold", "Edge Detection Threshold", {
 															min: 0, max: 300, step: 1, value:100,
 															change: function(event, ui){ global.mainCanvasHandler.reloadImageFromGUI(); },
-															slide: function(event, ui){ global.mainCanvasHandler.reloadImageFromGUI(); } });
+															slide: function(event, ui){ global.mainCanvasHandler.reloadImageFromGUI(); } 
+	});
 	
 	
 	
-	// Radio button selectors 
+	// Radio button selectors (The options are in index.html because...?)
 	// Set default checked, matches default in designHandler...
 	$("#radio-3").prop('checked', true);
 	$( "input[type='radio']" ).checkboxradio().on("change", function(e){ global.mainDesignHandler.updatePathSelection($( e.target ).val()); });

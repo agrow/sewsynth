@@ -10,6 +10,8 @@ var CanvasHandler = function(canvasID){
 	this.setCanvasDimensions(global.calcWidth, global.calcHeight);
 	*/
 	
+	this.interpreter = new BitmapInterpreter();
+	
 	// TESTING PAPERJS
 	paper.install(window);
 	
@@ -92,7 +94,9 @@ CanvasHandler.prototype.loadUserImage = function(fileObject){
 	this.uploadImageRaster.onLoad = function(){
 		handler.uploadImageRaster.position = view.center;
 		handler.savedOriginalImage = handler.uploadImageRaster.getImageData();
-		handler.reloadImage("canny", getValueOfSlider("edgeThreshold"));
+		
+		//handler.reloadImage("canny", getValueOfSlider("edgeThreshold"));
+		//handler.reloadImage("sobel", getValueOfSlider("edgeThreshold"));
 		//var filtered = Filters.sobel(handler.uploadImageRaster.getImageData());
 		
 		/* = Filters.filterImage(Filters.convolute, handler.uploadImageRaster.getImageData(),
@@ -102,6 +106,8 @@ CanvasHandler.prototype.loadUserImage = function(fileObject){
 			);*/
 		//console.log(filtered);
 		//handler.uploadImageRaster.setImageData(filtered);
+		
+		handler.interpreter.interpretBitmap(handler.savedOriginalImage);
 	};
 };
 
@@ -117,7 +123,11 @@ CanvasHandler.prototype.reloadImage = function(filter, threshold){
 	
 	// NOTE: THIS USES THE CACHED ORIGINAL IMAGE!!
 	if(filter === "sobel") {
+		// sobel
 		filtered = Filters.sobel(this.savedOriginalImage, threshold);
+		// dilate to help identify holes....
+		filtered = Filters.morphologicalGradient(filtered, [1,1,1,1,1,1,1,1,1], "dilate");
+		
 	} else if (filter === "canny"){
 		// grayscale
 		filtered = Filters.grayscale(this.savedOriginalImage);
@@ -126,6 +136,8 @@ CanvasHandler.prototype.reloadImage = function(filter, threshold){
 		// sobel, prewitts, cross, ??
 		filtered = Filters.sobel(filtered, threshold);
 		// thin?
+		// 2 "lines" 1x3 and 3x1 result in just a 3x3 comparison, so we rolled with that in one step
+		filtered = Filters.morphologicalGradient(filtered, [1,1,1,1,1,1,1,1,1], "shrink");
 		// remove weak/false edges?
 	}
 	
@@ -194,6 +206,18 @@ Filters.createImageData = function(w,h) {
   return this.tmpCtx.createImageData(w,h);
 };
 
+Filters.comparePixels = function(pixels, loc1, loc2){
+	var src = pixels.data;
+	
+	if(src[loc1] == src[loc2] &&
+		src[loc1+1] == src[loc2+1] &&
+		src[loc1+2] == src[loc2+2] &&
+		src[loc1+3] == src[loc2+3]){
+			return true;
+		}
+	return false;
+};
+
 Filters.convolute = function(pixels, weights, opaque) {
   var side = Math.round(Math.sqrt(weights.length));
   var halfSide = Math.floor(side/2);
@@ -238,6 +262,114 @@ Filters.convolute = function(pixels, weights, opaque) {
   return output;
 };
 
+// Basic flood fill at pixel location x, y
+////////////////////////////
+// UNFINISHED!!!!
+////////////////////////////
+Filters.floodFill = function(pixels, x, y){
+	var src = pixels.data;
+	var sw = pixels.width;
+	var sh = pixels.height;
+	var safetyCount = 9999999;
+	
+	var w = sw;
+	var h = sh;
+	
+	var pixel_stack = [[x, y]];
+	var startLoc = (y*w + x) * 4;
+	
+	// Always beware infinite loops with while!!
+	while(pixel_stack.length && safetyCount > 0){
+		
+		var newPos, x, y, pixelPos, reachLeft, reachRight;
+		newPos = pixelStack.pop();
+		x = newPos[0];
+		y = newPos[1];
+		  
+		pixelPos = (y*w + x) * 4;
+		while(y-- >= 0 && comparePixels(pixels, startLoc, pixelPos)) {
+			pixelPos -= w * 4; // pop up to the top
+		}
+		// Reset variables to check the row
+		pixelPos += w * 4;
+		++y;
+		reachLeft = false;
+		reachRight = false;
+		  while(y++ < h-1 && comparePixels(startLoc, pixelPos))
+		  {
+		    colorPixel(pixelPos);
+		
+		    if(x > 0)
+		    {
+		      if(matchStartColor(pixelPos - 4))
+		      {
+		        if(!reachLeft){
+		          pixelStack.push([x - 1, y]);
+		          reachLeft = true;
+		        }
+		      }
+		      else if(reachLeft)
+		      {
+		        reachLeft = false;
+		      }
+		    }
+			
+		    if(x < canvasWidth-1)
+		    {
+		      if(matchStartColor(pixelPos + 4))
+		      {
+		        if(!reachRight)
+		        {
+		          pixelStack.push([x + 1, y]);
+		          reachRight = true;
+		        }
+		      }
+		      else if(reachRight)
+		      {
+		        reachRight = false;
+		      }
+		    }
+					
+		    pixelPos += canvasWidth * 4;
+		  }
+		
+		
+		
+		safetyCount--;
+	}
+	
+};
+
+// basically, flood fill on the exterior pixels. 
+// Return a binary mask where 1 is the exterior and 0 is the interior
+////////////////////////////
+// UNFINISHED!!!!
+////////////////////////////
+Filters.findExteriorMask = function(pixels){
+	var src = pixels.data;
+	var sw = pixels.width;
+	var sh = pixels.height;
+	
+	var w = sw;
+	var h = sh;
+	
+	var mask = [];
+};
+
+////////////////////////////
+// UNFINISHED!!!!
+////////////////////////////
+Filters.fillHoles = function(pixels){
+	var src = pixels.data;
+	var sw = pixels.width;
+	var sh = pixels.height;
+	
+	var w = sw;
+	var h = sh;
+	
+	var output = Filters.createImageData(w, h);
+};
+
 // "Type" should be dilate or shrink
 Filters.morphologicalGradient = function(pixels, weights, type){
 	var side = Math.round(Math.sqrt(weights.length));
@@ -248,6 +380,7 @@ Filters.morphologicalGradient = function(pixels, weights, type){
 	var sh = pixels.height;
   //console.log("pixels", pixels);
 
+	// height and width of whole image
 	var w = sw;
  	var h = sh;
   //console.log("w, h", w, h);
@@ -256,21 +389,42 @@ Filters.morphologicalGradient = function(pixels, weights, type){
 	
 	for (var y=0; y<h; y++) {
 	    for (var x=0; x<w; x++) {
-	      var sy = y;
+	      var sy = y; // current pixel we are working on
 	      var sx = x;
-	      var dstOff = (y*w+x)*4;
+	      var dstOff = (y*w+x)*4; // y * width of row to get actual y, +x is offset *4 is rgba values
 	      var r=0, g=0, b=0, a=0;
+			
+			r = src[dstOff]; 
+			g = src[dstOff+1]; 
+			b = src[dstOff+2]; 
+			a = 255;
+			//console.log("Value at pixel..." + x + ", " + y + ": " + r + ", " + g + ", " + b);
+			
 	      for (var cy=0; cy<side; cy++) {
-	        for (var cx=0; cx<side; cx++) {
-	          var scy = Math.min(sh-1, Math.max(0, sy + cy - halfSide));
-	          var scx = Math.min(sw-1, Math.max(0, sx + cx - halfSide));
-	          var srcOff = (scy*sw+scx)*4;
-	          var wt = weights[cy*side+cx];
-	          r += src[srcOff] * wt;
-	          g += src[srcOff+1] * wt;
-	          b += src[srcOff+2] * wt;
-	          a += src[srcOff+3] * wt;
-	        }
+				for (var cx=0; cx<side; cx++) {
+					  var scy = Math.min(sh-1, Math.max(0, sy + cy - halfSide));
+					  var scx = Math.min(sw-1, Math.max(0, sx + cx - halfSide));
+					  var srcOff = (scy*sw+scx)*4;
+					  var wt = weights[cy*side+cx];
+					  
+					  // if this is a value we are considering... mix/max
+					  if(wt > 0){
+					  		if(type === "shrink"){ // Looking to find the maximum value... (0 is black)
+					  			if(r < src[srcOff]) r = src[srcOff];
+					  			if(g < src[srcOff+1]) g = src[srcOff+1];
+					  			if(b < src[srcOff+2]) b = src[srcOff+2];
+					  			if(a < src[srcOff+3]) a = src[srcOff+3];
+					  	} else if (type === "dilate"){ // Looking to find the maximum value... (255 is white)
+					  			if(r > src[srcOff]) r = src[srcOff];
+					  			if(g > src[srcOff+1]) g = src[srcOff+1];
+					  			if(b > src[srcOff+2]) b = src[srcOff+2];
+					  			if(a > src[srcOff+3]) a = src[srcOff+3];
+					  		} else {
+					  			console.err("Called morphological gradient without dilate/shrink setting");
+					  			return;
+					  		}
+					  }
+				}
 	      }
 	      dst[dstOff] = r;
 	      dst[dstOff+1] = g;
