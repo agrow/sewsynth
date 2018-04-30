@@ -1,5 +1,5 @@
 // !!!!!! TODO: Most of this should be moved to designPath.js
-// !!!!!!  So we can have multiple paths in one design...
+// !!!!!!  So we can easily have multiple paths in one design...
 
 var Design = function() {
 	this.verbose = false;
@@ -209,6 +209,35 @@ Design.prototype.generateSewnFlattenedPath = function(params){
 };
 
 
+Design.prototype.generateSewnDesignPath = function(params){
+	// Check dependencies (should be programmatic)
+	if(this.defaultPath === null){
+		console.err("Should not be calling generateSewnFlattenedPath without a defaultPath");
+		return;
+	}
+	
+	if(this.simplifiedPath === null){
+		console.err("Should not be calling generateSewnFlattenedPath without a simplifiedPath");
+		return;
+	}
+
+	if(this.designPath === null){
+		console.err("Should not be calling generateSewnFlattenedPath without a flattenedPath");
+		return;
+	}
+
+	// Clean up old, dirty path (should be programmatic)
+	if(this.sewnDesignPath !== null){
+		this.sewnDesignPath.remove();
+		this.sewnDesignPath = null;
+	}
+
+	this.sewnDesignPath = new Path(this.plotPathPointsOnDistance(this.designPath));
+	this.sewnDesignPath.strokeColor = 'blue';
+	this.sewnDesignPath.opacity = 1;
+	console.log("generatedToSewnDesignPath complete with length " + this.sewnDesignPath.segments.length);
+};
+
 ///////////////////////////////////////////////////////////////////////////////////////
 //////////// Helpers for Path Translation /////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -235,6 +264,8 @@ Design.prototype.regeneratePaths = function(params){
 	this.generateFlattenedPath(params);
 	this.generateSewnFlattenedPath(params);
 	this.testRelativeDesign();
+	this.generateSewnDesignPath(params);
+	
 	//this.testAbsSinDesign(0.3, 4);
 };
 
@@ -267,50 +298,7 @@ Design.prototype.plotPathPointsOnDistance = function(path){
 		plottedPoints.push(point);
 	}
 
-	/* // DOING IT BY HAND IS FOR SUCKERS
-	// Loop through every pair of points, working with current point and next point,
-	// plotting on the first point and filling in from there for each pair,
-	// taking a special case for add the last point in the last pair
-	for(var i = 0; i < path.segments.length-1; i++){
-		//console.log(path.getPointAt(0));
-		var startPoint = path.segments[i].point.clone();
-		var endPoint = path.segments[i+1].point.clone();
-		var vector = startPoint.subtract(endPoint);
-
-		console.log("start, end IDs:", i, i+1);
-		console.log("start, end:", startPoint, endPoint);
-		
-		console.log("vector:", vector);
-		vector = vector.normalize();
-		console.log("normalized vector: ", vector);
-
-		//plottedPoints.push(startPoint.clone()); // not a special case actually
-		var distance = startPoint.getDistance(endPoint);
-		//console.log(this.stitchLengthPixels);
-		// Without .ceiling, if we distributed the stitch, their length would be > this.stitchLengthPixels (our max)
-		var numStitchesFit = Math.ceil(distance/this.stitchLengthPixels); // distance / pixels = number of stitch, a whole number
-		var distPerStitch = distance/numStitchesFit; // stitch per number of stitches distributed again among total distance
-		console.log("total distance, numStitchesFit, distance per stitch", distance,numStitchesFit, distPerStitch);
-
-		for(var j = 0; j < numStitchesFit; j++){
-			var pt = startPoint.clone();
-			// new position = pt + (distPerStitch*vector)*(j+1)
-			console.log("distance from start point", (distPerStitch * j));
-			console.log("scaled by normal vector", vector.multiply(distPerStitch * j))
-			pt = pt.add(vector.multiply(distPerStitch * j)); // 0 at first stitch stitches at start, onward...
-			// save it
-			plottedPoints.push(pt.clone());
-			console.log("plotting point j", j, pt);
-		}
-
-		// sew the last position
-		if(i == path.segments.length -2){
-			plottedPoints.push(endPoint.clone());
-			console.log("Ending path at ", endPoint);
-			console.log("=========================================");
-		}
-	}
-	*/
+	
 	console.log("plotted sewn points on disance", plottedPoints);
 	return plottedPoints;
 }

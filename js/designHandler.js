@@ -175,13 +175,13 @@ DesignHandler.prototype.saveAllDesignsToFile = function(){
 		// For each point in this design, stitch to there!
 		for(var j = 0; j < pathPoints.length; j++){
 			var point = pathPoints[j];
-			this.fillInStitchGapsAndAddStitchAbs(stPattern, this.scale, point.x, point.y, stitchTypes.normal, true, this.threshold, stitchTypes.normal);
+			this.fillInStitchGapsAndAddStitchAbs(stPattern, this.scale, point.x, point.y, stitchTypes.normal, true, this.threshold);//, stitchTypes.normal);
 		}
 		// If there are more designs after this one...
 		if(i < this.designs.length-1) {
 			// JUMP from the last stitch of this design to the last stitch of the next
 			var firstStitch = this.designs[i+1].getFirstPoint();
-			this.fillInStitchGapsAndAddStitchAbs(stPattern, this.scale, firstStitch.x, firstStitch.y, stitchTypes.jump, true, this.threshold, stitchTypes.normal);
+			this.fillInStitchGapsAndAddStitchAbs(stPattern, this.scale, firstStitch.x, firstStitch.y, stitchTypes.jump, true, this.threshold)//, stitchTypes.normal);
 		}
 	}
 	
@@ -203,7 +203,7 @@ DesignHandler.prototype.saveAllDesignsToFile = function(){
 	// And print!
 	var rando = Math.floor(Math.random() * 1000);
 	var name = "draw_" + $.datepicker.formatDate('mm-dd-yy', new Date()) + "_" + rando + ".dst";
-	//dstWrite(name, stPattern); // dstformat.js
+	dstWrite(name, stPattern); // dstformat.js
 	
 	console.log("Saved file to " + name);
 };
@@ -212,11 +212,9 @@ DesignHandler.prototype.fillInStitchGapsAndAddStitchAbs = function(stPattern, sc
 	var tempX = x;//*scale;
 	var tempY = y;//*scale;
 	
-	console.log("____ calling fillInStitchGraphAndAddStitchAbs: " + scale + ", " + x + ", " + y + ", " + flags + ", " + color);
+	//console.log("____ calling fillInStitchGraphAndAddStitchAbs: " + scale + ", " + x + ", " + y + ", " + flags + ", " + color);
 
-	var lastStitch;
-	if(stPattern.stitches.length > 1) lastStitch = stPattern.stitches[stPattern.stitches.length-1];
-	else lastStitch = {x:x, y:y};
+	var lastStitch = stPattern.stitches[stPattern.stitches.length-1];
 	var newX = 0;
 	var newY = 0;
 	
@@ -224,40 +222,34 @@ DesignHandler.prototype.fillInStitchGapsAndAddStitchAbs = function(stPattern, sc
 	var xDiff = (x - lastStitch.x)*scale;
 	var yDiff = (y - lastStitch.y)*scale;
 	var count = 0; // Just in case!
-	var dist = Math.sqrt(xDiff * xDiff + yDiff * yDiff); // at scale
-	// if dist > threshold, numSteps will be > 1
-	var numSteps = Math.ceil(dist/threshold);
 	
-	console.log("__Diffs: " + xDiff + ", " + yDiff);
+	//console.log("__Diffs: " + xDiff + ", " + yDiff);
 	
-	for(var i = 0; i <= numSteps; i++){
-		
-	}
-	/*
 	while((xDiff > threshold || xDiff < -threshold || yDiff > threshold || yDiff < -threshold) && count < 1000){
 		
 		if(xDiff > threshold){
-			newX = lastStitch.x + threshold;
+			newX = threshold;
 			xDiff -= threshold;
 		} else if (xDiff < -threshold) { 
-			newX = lastStitch.x -threshold;
+			newX = -threshold;
 			xDiff += threshold;
 		}
 		
 		if(yDiff > threshold){
-			newY = lastStitch.y + threshold;
+			newY = threshold;
 			yDiff -= threshold;
 		} else if (yDiff < -threshold) { 
-			newY = lastStitch.y -threshold;
+			newY = -threshold;
 			yDiff += threshold;
 		}
 		
-		console.log("adding intermediate relative stitch +/-: " + newX + ", " + newY);
-		stPattern.addStitchRel(newX/scale, newY/scale, gapFlag, color); 
+		//console.log("adding intermediate relative stitch +/-: " + newX + ", " + newY);
+		stPattern.addStitchRel(newX/scale, newY/scale, stitchTypes.jump, color); 
 		
 		count++;
-	}*/
-	
+	}
+	if(count > 0) console.log("last stitch is " + xDiff + ", " + yDiff + " away from the last stitch");
+
 	stPattern.addStitchAbs(tempX, tempY, flags, color);
 };
 
