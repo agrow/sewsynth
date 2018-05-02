@@ -6,11 +6,29 @@
  * 
  * DesignPath is primarily a container to be edited by Design.
  * However, DesignPath does handle translating its paperPath to a sewing path
+ * 
+ * HOW TO ACCESS/SELECT A PATH VIA "params"
+ * params={
+ * 	path: {sewn: false/true/"both"}
+ *  simplifiedPath: {sewn: false/true/"both"}
+ *  flattenedPath: {sewn: false/true/"both"}
+ * }
+ * 
  */
 
+// Set special variable attached to paper.js Path that we will make use of
+// Basically, any path of points, in whatever state, can be sewn. 
+// DesignPath is what has the knowledge to calculate this path.
+// THIS SHOULD BE ANOTHER PATH
+paper.Path.prototype.sewnPath = null;
+
 var DesignPath = function(pPath){
-	if (pPath == undefined || pPath == null)this.paperPath = new Path();
-	else this.paperPath = pPath;
+	if (pPath == undefined || pPath == null){
+		this.paperPath = new Path();
+	} else { 
+		// should this be this.paperPath = new Path(pPath)?
+		this.paperPath = pPath;
+	}
 	
 	this.derivitivePaths = {
 		simplifiedPath: null, // this.paperPath.simplify()
@@ -41,11 +59,104 @@ var DesignPath = function(pPath){
 //// GETTERS /////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////
 
-DesignPath.prototype.getPPath = function(){
-	return this.paperPath;
-}; // getPPath
+// to alleviate copyPaste, this function does all the null and undefined checks
+DesignPath.prototype.parseParams = function(params){
+	var results = [];
+	
+	if(params === undefined || params === null){
+		return results;
+	}
+	
+	if(params.path !== undefined && params.path !== null){
+		if(params.path.sewn === undefined || params.path.sewn === null || params.path.sewn === false){
+			results.push("path");
+		} else if (params.path.sewn === true){
+			results.push("path.sewnPath");
+		} else if (params.path.sewn === "both"){
+			results.push("path");
+			results.push("path.sewnPath");
+		}
+	}
+	
+	if(params.simplifiedPath !== undefined && params.simplifiedPath !== null){
+		if(params.simplifiedPath.sewn === undefined || params.simplifiedPath.sewn === null || params.simplifiedPath.sewn === false){
+			results.push("simplifiedPath");
+		} else if (params.simplifiedPath.sewn === true){
+			results.push("simplifiedPath.sewnPath");
+		} else if (params.simplifiedPath.sewn === "both"){
+			results.push("simplifiedPath");
+			results.push("simplifiedPath.sewnPath");
+		}
+	}
+	
+	if(params.flattentedPath !== undefined && params.flattentedPath !== null){
+		if(params.flattentedPath.sewn === undefined || params.flattentedPath.sewn === null || params.flattentedPath.sewn === false){
+			results.push("flattentedPath");
+		} else if (params.flattentedPath.sewn === true){
+			results.push("flattentedPath.sewnPath");
+		} else if (params.flattentedPath.sewn === "both"){
+			results.push("flattentedPath");
+			results.push("flattentedPath.sewnPath");
+		}
+	}
+	
+	console.log("parsed params: ", results);
+	return results;
+}
 
-DesignPath.prototype.getPathPoints = function(path){
+ /* HOW TO ACCESS/SELECT A PATH VIA "params"
+ * params={
+ * 	path: {sewn: false/true}
+ *  simplifiedPath: {sewn: false/true}
+ *  flattenedPath: {sewn: false/true}
+ * }
+ */
+// getPaperPath returns the first applicable path
+// TODO -- regenerates paths if they are dirty
+// -- regenerates sewn paths if they are non-null of a dirty path
+DesignPath.prototype.getPaperPath = function(params){
+	if(params === undefined || params === null){
+		console.log("getPath params undefined/null, returning null", params);
+		return null;
+	}
+	var parsedParams = this.parseParams(params);
+	if(parsedParams.length > 1) console.log("getPaperPath will only return 1 path at a time, returning path at 0", parsedParams);
+	
+	// skips if length is 0
+	for(var i = 0; i < parseParams.length; i++){
+	
+		switch(parseParams[i]) {
+		    case "path":
+		        return this.paperPath;
+		        break;
+		    case "path.sewnPath":
+		        return this.paperPath.sewnPath;
+		        break;
+		    case "path.simplifiedPath":
+		        return this.derivitivePaths.simplifiedPath;
+		        break;
+		    case "path.simplifiedPath.sewnPath":
+		        return this.derivitivePaths.simplifiedPath.sewnPath;
+		        break;
+		    case "path.flattentedPath":
+		        return this.derivitivePaths.flattentedPath;
+		        break;
+		    case "path.flattentedPath.sewnPath":
+		        return this.derivitivePaths.flattentedPath.sewnPath;
+		        break;
+		    default:
+		        break;
+		}
+	}
+	
+	console.log("no acceptable path key specified in getPaperPath params, returning null", params);
+	return null;
+}; // getPaperPath
+
+// args: a Paper.js path
+// pre: path !== null
+// returns: new array of Paper.js points made off of the path's segments
+DesignPath.prototype.getPathPointsOfPaperJSPath = function(path){
 	if(path == null){
 		console.log("no path specified in getPathPoints, using default paperPath");
 		path = this.paperPath;
@@ -53,37 +164,22 @@ DesignPath.prototype.getPathPoints = function(path){
 	
 	var points = [];
 	
-	for(var i = 0, i < path.segments.length; i++){
+	for(var i = 0; i < path.segments.length; i++){
 		points.push(path.segments.point.clone());
 	}
 	return points;
 };
 
-// TO DO: ADDITIONAL PARAMS: USE OLD PARAMS?
-DesignPath.prototype.getSimplifiedPath = function(params){
-	if(this.dirtyPaths.simplifiedPath == true){
-		this.generateSimplifiedPath(params);
-	}
-	
-	return this.derivitivePaths.simplifiedPath;
-};
-
-// TO DO: ADDITIONAL PARAMS: USE OLD PARAMS?
-DesignPath.prototype.getFlattenedPath = function(params){
-	
-	if(this.dirtyPaths.simplifiedPath == true ||
-		this.dirtyPaths.flattnedPath == true){
-		this.generateFlattenedPath(params);
-	}
-	
-	return this.derivitivePaths.flattenedPath;
-	
+DesignPath.prototype.getPointsOfPath = function(params){
+	var pathToParse = this.getPaperPath(params);
+	var points = this.getPathPointsOfPaperJSPath(pathToParse);
+	return points;
 };
 
 // Params: path is null or paper.js path
 // Pre: this.stithLengthPixels is set by this.setSewnStitchLength
 // Return: A list of x,y points based on a specific preset scale
-DesignPath.prototype.getSewnPath = function(path){
+DesignPath.prototype.calcSewnPath = function(path){
 	if(path == null){
 		console.log("no path specified in getSewnPath, using default paperPath");
 		path = this.paperPath;
@@ -137,6 +233,148 @@ DesignPath.prototype.setAllPathsDirty = function(){
 
 };
 
+// Args: None
+// Pre: None
+// Post: Non-null paths are set as hidden
+DesignPath.prototype.setAllPathsHidden = function(){
+	if(this.paperPath !== null){
+		this.paperPath.visible = false;
+		this.paperPath.sewnPath.visible = false;
+	}
+	for (var key in this.derivitivePaths) {
+	    // skip loop if the property is from prototype
+	    if (!this.derivitivePaths.hasOwnProperty(key)) continue;
+	
+	    if (this.derivitivePaths[key] !== null){
+	    	this.derivitivePaths[key].visible = false;
+	    	this.derivitivePaths[key].sewnPath.visible = false;
+	    	
+	    } 
+    }
+	
+};
+
+// Args: None
+// Pre: None
+// Post: Non-null paths are set as not selected
+DesignPath.prototype.setAllPathsDeselected = function(){
+	if(this.paperPath !== null){
+		this.paperPath.selected = false;
+		this.paperPath.sewnPath.selected = false;
+	}
+	
+	for (var key in this.derivitivePaths) {
+	    // skip loop if the property is from prototype
+	    if (!this.derivitivePaths.hasOwnProperty(key)) continue;
+	
+	    if (this.derivitivePaths[key] !== null){
+	    	this.derivitivePaths[key].selected = false;
+	    	this.derivitivePaths[key].sewnPath.selected = false;
+	    } 
+    }
+};
+
+/* HOW TO ACCESS/SELECT A PATH VIA "params"
+ * params={
+ * 	path: {sewn: false/true}
+ *  simplifiedPath: {sewn: false/true}
+ *  flattenedPath: {sewn: false/true}
+ * }
+ */
+// NOTE: This can select and show multiple paths!!
+DesignPath.prototype.selectAndShowPaths = function(params){
+	if(params === undefined || params === null){
+		// Uhh? What do we want default behavior to be?
+		console.log("Cannot selectAndShowPaths without params", params);
+		return;
+	}
+
+	var parsedParams = this.parseParams(params);
+	
+	// skips if length is 0
+	for(var i = 0; i < parseParams.length; i++){
+	
+		switch(parseParams[i]) {
+		    case "path":
+		        this.paperPath.selected = true;
+				this.paperPath.visible = true;
+		        break;
+		    case "path.sewnPath":
+		        this.paperPath.sewnPath.selected = true;
+				this.paperPath.sewnPath.visible = true;
+		        break;
+		    case "path.simplifiedPath":
+		        this.derivitivePaths.simplifiedPath.selected = true;
+				this.derivitivePaths.simplifiedPath.visible = true;
+		        break;
+		    case "path.simplifiedPath.sewnPath":
+		        this.derivitivePaths.simplifiedPath.sewnPath.selected = true;
+		        this.derivitivePaths.simplifiedPath.sewnPath.visible = true;
+		        break;
+		    case "path.flattentedPath":
+		        this.derivitivePaths.flattenedPath.selected = true;
+				this.derivitivePaths.flattenedPath.visible = true;
+		        break;
+		    case "path.flattentedPath.sewnPath":
+		        this.derivitivePaths.flattenedPath.sewnPath.selected = true;
+		        this.derivitivePaths.flattenedPath.sewnPath.visible = true;
+		        break;
+		    default:
+		        break;
+		}
+	}
+	
+	return;
+};
+
+// accepted params for drawing properties are:
+// params.strokeColor
+// params.opacity
+DesignPath.prototype.setPathDrawingProperties = function(params){
+	if(params === undefined || params === null){
+		console.log("Cannot setPathDrawingProperties without params", params);
+		return;
+	}
+	
+	var parsedParams = this.parseParams(params);
+	
+	// skips if length is 0
+	for(var i = 0; i < parseParams.length; i++){
+	
+		switch(parseParams[i]) {
+		    case "path":
+		        if(params.strokeColor !== undefined && params.strokeColor !== null) this.paperPath.strokeColor = params.strokeColor;
+		        if(params.opacity !== undefined && params.opacity !== null) this.paperPath.opacity = params.opacity;
+		        break;
+		    case "path.sewnPath":
+		        if(params.strokeColor !== undefined && params.strokeColor !== null) this.paperPath.sewnPath.strokeColor = params.strokeColor;
+		        if(params.opacity !== undefined && params.opacity !== null) this.paperPath.sewnPath.opacity = params.opacity;
+		        break;
+		    case "path.simplifiedPath":
+		        if(params.strokeColor !== undefined && params.strokeColor !== null) this.derivitivePaths.simplifiedPath.strokeColor = params.strokeColor;
+		        if(params.opacity !== undefined && params.opacity !== null) this.derivitivePaths.simplifiedPath.opacity = params.opacity;
+		        break;
+		    case "path.simplifiedPath.sewnPath":
+		        if(params.strokeColor !== undefined && params.strokeColor !== null) this.derivitivePaths.simplifiedPath.sewnPath.strokeColor = params.strokeColor;
+		        if(params.opacity !== undefined && params.opacity !== null) this.derivitivePaths.simplifiedPath.sewnPath.opacity = params.opacity;
+		        break;
+		    case "path.flattentedPath":
+		        if(params.strokeColor !== undefined && params.strokeColor !== null) this.derivitivePaths.flattentedPath.strokeColor = params.strokeColor;
+		        if(params.opacity !== undefined && params.opacity !== null) this.derivitivePaths.flattentedPath.opacity = params.opacity;
+		        break;
+		    case "path.flattentedPath.sewnPath":
+		        if(params.strokeColor !== undefined && params.strokeColor !== null) this.derivitivePaths.flattentedPath.sewnPath.strokeColor = params.strokeColor;
+		        if(params.opacity !== undefined && params.opacity !== null) this.derivitivePaths.flattentedPath.sewnPath.opacity = params.opacity;
+		        break;
+		    default:
+		        break;
+		}
+	}
+	
+	return;
+	
+};
+
 // stitchLength is in mm
 // pixelsPerMM is the screen -> stitchLength scale conversion
 // pixelsPerMM should always be a number >1 (otherwise jesus how tiny is this path/screen? Oh, but that's an idea....)
@@ -167,12 +405,65 @@ DesignPath.prototype.setNewPaperPath = function(path){
 	this.setAllPathsDirty();
 };
 
+// Args: path: non-null paper.js path
+// Pre: this.paperPath !== null
+// Post: this.designPath is set to path
+DesignPath.prototype.setDesignPath = function(path){
+	if(path == null){
+		console.log("setDesignPath cannot be set with null path", path);
+		return;
+	}
+	
+	if(this.paperPath == null){
+		console.log("Should not be setDesignPath on a null paperpath");
+	}
+	
+	// Clean up old path
+	if(this.derivitivePaths.designPath !== null) {
+		this.derivitivePaths.designPath.remove();
+	}
+	
+	this.derivitivePaths.designPath = path;
+	this.dirtyPaths.designPath = false;
+	
+};
+
+////////////////////////////////////////////////////////////////
+///// OPERATIONS ///////////////////////////////////////////////
+////////////////////////////////////////////////////////////////
+
+// Args: a non-null paper.js path // TODO: CHECK or make new case for list of points []
+// Pre: None
+// Post: returns new path with locations in path as whole numbers
+DesignPath.prototype.roundPathPoints = function(path){
+	if(path == undefined || path == null){
+		console.log("Cannot roundPathPoints without a paper.js path", path);
+	}
+	
+	var newPath = path.clone();
+	for(var i = 0; i < path.segments.length; i++){
+		var newPoint = path.segments.point.clone();
+		newPoint.x = Math.round(newPoint.x);
+		newPoint.y = Math.round(newPoint.y);
+		newPath.add(newPoint);
+	}
+	
+	return newPath;
+};
+
+// CALCULATE SIZE?
+
+// MOVE DESIGN?
+
+// FIND CENTER?
+
 /////////////////////////////////////////////////////////////////
 ///// COMPUTE PATHS ////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////
 
 // Pre: this.paperPath is not null, otherwise return 
 // Post: this.derivitivePaths.simplifiedPath is set if this.paperPath is not null
+//       this.derivitivePaths.simplifiedPath.sewn is recalculated if it was not null
 //       this.dirtyPaths.simplifiedPath = false
 DesignPath.prototype.generateSimplifiedPath = function(params){
 	// Check dependencies
@@ -199,14 +490,24 @@ DesignPath.prototype.generateSimplifiedPath = function(params){
 		this.derivitivePaths.simplifiedPath.simplify(params.tolerance);
 	}
 	
+	// IF SIMPLIFIED.SEWNPATH IS NOT NULL, REGENERATE THAT TOO
+	if(this.derivitivePaths.simplifiedPath.sewnPath !== null){
+		this.derivitivePaths.simplifiedPath.sewnPath.remove();
+		this.derivitivePaths.simplifiedPath.sewnPath = null;
+		
+		// this.roundPathPoints returns a new Path
+		this.derivitivePaths.simplifiedPath.sewnPath = this.roundPathPoints(this.getSewnPath(this.derivitivePaths.simplifiedPath));
+	}
+	
 	// FLAG IS NOW CLEAN
 	this.dirtyPaths.simplifediPath = false;
 };
 
 // Pre: paperPath is not null, otherwise return 
 //      simplifiedPath !== null or dirty, otherwise generate it
-// Post: this.derivitivePaths.simplifiedPath is set if this.paperPath is not null
-//       this.dirtyPaths.simplifiedPath = false
+// Post: this.derivitivePaths.flattenedPath is set if this.paperPath is not null
+//       this.derivitivePaths.flattenedPath.sewn is recalculated if it was not null
+//       this.dirtyPaths.flattenedPath = false
 
 DesignPath.prototype.generateFlattenedPath = function(params){
 	// Check dependencies
@@ -238,10 +539,18 @@ DesignPath.prototype.generateFlattenedPath = function(params){
 	if(params === undefined || params.flatness === undefined){
 		console.log("using default path settings in generateFlattenedPath");
 		//  Part of Paper.js
-		this.derivitivePaths.flattenedPath.flatten(); // default is 2.5, maximum error
+		this.derivitivePaths.flattenedPath.flatten(); // default is 2.5, it is the maximum error allowed
 	} else {
 		this.lastUsedParams.flatness = params.flatness;
 		this.derivitivePaths.flattenedPath.flatten(params.flatness);
+	}
+	
+	// IF FLATTENEDPATH.SEWNPATH IS NOT NULL, REGENERATE THAT TOO
+	if(this.derivitivePaths.flattenedPath.sewnPath !== null){
+		this.derivitivePaths.flattenedPath.sewnPath.remove();
+		this.derivitivePaths.flattenedPath.sewnPath = null;
+		
+		this.derivitivePaths.flattenedPath.sewnPath = this.roundPathPoints(this.getSewnPath(this.derivitivePaths.flattenedPath));
 	}
 	
 	// FLAG IS NOW CLEAN

@@ -8,258 +8,51 @@ var Design = function() {
 	this.dimensions = {smallX: 999999, bigX: -999999, 
 					   smallY: 999999, bigY: -999999, 
 					   width: -1, height: -1};
-	
-	this.head = null;
-	this.tail = null;
+					
+	// list of DesignPaths   
+	this.paths = [];
 	
 	this.currentAnchor = null;
-	
-	// In order of creation
-	this.pointsStack = [];
-	// By ID
-	this.pointsMap = [];
-	
-	// By Location // TO DO LATER, IF IT'S USEFUL //
-	//this.pointsMapByLocation = [];
-
-		// TO DO: USE THIS INSTEAAAAD!
-	this.paths = {
-		"defaultPath": null,
-		"simplifiedPath": null,
-		"flatteenedPath": null,
-		"designPath": null,
-		"sewnFlattenedPath": null,
-		"sewnDesignPath": null, 
-	}
-
-	// Used to determine which paths should be made dirty when a change gets made higher up the dependency chain
-	// use recusion to hit all children down the tree
-	this.pathDependents = {
-		"defaultPath" : ["simplifiedPath"],
-		"simplifiedPath" : ["flattenedPath"],
-		"flattenedPath": ["designPath","sewnFlattenedPath" ],
-		"designPath": ["sewnDesignPath"],
-		"sewnFlattenedPath": [],
-		"sewnDesignPath": [], 
-	};
-	// TO DO: USE THIS (correspends with path item #) to detect when to re-generate paths 
-	// further down the chain when they are needed
-	this.dirty = [true, true, true, true, true, true];
-	
-	// For drawing/canvas vis
-	this.defaultPath = null;
-	this.simplifiedPath = null;
-	this.flattenedPath = null; // aka "segmentedPath" in the GUI
-	this.designPath = null;
-	this.sewnFlattenedPath = null;
-	this.sewnDesignPath = null;
-
-	this.stitchLengthMM = 2;
-	this.pixelsPerMM = 10;
-	// this is a MAX length. any uneven length is distributed between the ceiling of the division
-	this.stitchLengthPixels = undefined;
-	this.setSewnStitchLength(this.stitchLengthMM, this.pixelsPerMM);
-	
-	// JANK-FAST PRINTING!! The Path sent from the canvas is directly fed into the default path and beyond
-	this.pathPoints = [];
-	this.generatedPathPoints = [];
 	
 	return this;
 }; // Design
 
-// stitchLength is in mm
-// pixelsPerMM is the screen -> stitchLength scale conversion
-// pixelsPerMM should always be a number >1 (otherwise jesus how tiny is this path/screen? Oh, but that's an idea....)
-Design.prototype.setSewnStitchLength = function(stitchLengthMM, pixelsPerMM){
-	this.stitchLengthMM = stitchLengthMM;
-	this.pixelsPerMM = pixelsPerMM;
-
-	this.stitchLengthPixels = stitchLengthMM * pixelsPerMM; 
-
-	console.log("Stitch Length Properties Set: " + this.stitchLengthMM + " * " + this.pixelsPerMM + " = " + this.stitchLengthPixels);
-}
 
 ////////////////////////////////////////////////////////////////////////
-/////// ACCESSORS //////////////////////////////////////////////
+/////// ACCESSORS //////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
-///// TODO: Instead of having different functions for each, use the this.paths
-
-Design.prototype.getFirstPoint = function(){
-	if(this.generatedPathPoints.length > 0)
-		return this.generatedPathPoints[0];
-	else 
-		return null;
-};
-
-Design.prototype.getPointsForPrinting = function(){
-	this.roundPathPoints();
-	this.calcDimensionsBasedOnPathPoints();
-	
-	return this.generatedPathPoints;
-};
-
-Design.prototype.getSewnFlattenedPath = function(){
-	// Make sure the flattened path is ready
-	return this.sewnFlattenedPath;
-};
-
-Design.prototype.getSewnDesignPath = function(){
-	// Make sure the designPath has been translated
-	return this.sewnDesignPath;
-};
-
 
 ////////////////////////////////////////////////////////////////////////
-/////// DESIGN PATHS WITH PAPERJS //////////////////////////////////////////////
+/////// GENERATE PATHS WITH DESIGNPATH.JS //////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
 
 // Round PATHPOINTS positions to their next whole number...
 Design.prototype.roundPathPoints = function(){
-	for(var i = 0; i < this.pathPoints.length; i++){
-		this.pathPoints[i].x = Math.round(this.pathPoints[i].x);
-		this.pathPoints[i].y = Math.round(this.pathPoints[i].y);
-	}
-	for(var i = 0; i < this.generatedPathPoints.length; i++){
-		this.generatedPathPoints[i].x = Math.round(this.generatedPathPoints[i].x);
-		this.generatedPathPoints[i].y = Math.round(this.generatedPathPoints[i].y);
-	}
+	// Loop through all DesignPaths to round their points (and possibly points of all derived paths? Only derived paths?)
 };
 
 // Should be called on defaultPath as a stepping stone to flattenedPath, uses params.tolerance
 Design.prototype.generateSimplifiedPath = function(params){
-	if(this.defaultPath === null){
-		console.err("Should not be calling generateSimplifiedPath without a defaultPath");
-		return;
-	}
-	if(this.simplifiedPath !== null){
-		this.simplifiedPath.remove();
-		this.simplifiedPath = null;
-	}
-	
-	this.simplifiedPath = this.defaultPath.clone();
-	
-	if(params === undefined || params.tolerance === undefined){
-		console.log("using default path settings in generateSimplifidPath", params);
-		// Part of Paper.js
-		this.simplifiedPath.simplify();
-	} else {
-		this.simplifiedPath.simplify(params.tolerance);
-	}
+	// Loop through all DesignPaths to generate their simplified paths
 };
 
 // Should be called on simplifiedPath, uses params.flatten
 Design.prototype.generateFlattenedPath = function(params){	
-	// Check dependencies
-	if(this.defaultPath === null){
-		console.err("Should not be calling generateFlattenedPath without a defaultPath");
-		return;
-	}
-	
-	if(this.simplifiedPath === null){
-		console.err("Should not be calling generateFlattenedPath without a simplifiedPath");
-		return;
-	}
-	
-	// clean up old, dirty path
-	if(this.flattenedPath !== null){
-		this.flattenedPath.remove();
-		this.flattenedPath = null;
-	}
-	
-	this.flattenedPath = this.simplifiedPath.clone();
-	
-	if(params === undefined || params.flatness === undefined){
-		console.log("using default path settings in generateFlattenedPath");
-		//  Part of Paper.js
-		this.flattenedPath.flatten(); // default is 2.5, maximum error
-	} else {
-		this.flattenedPath.flatten(params.flatness);
-	}
+	// Loop through all DesignPaths to generate their flattenedPath
 };
 
-// Should be called after generatedFlattenedPath
-// Plots points stitchLength in pixels, preserving the start and end points especially
-Design.prototype.generateSewnFlattenedPath = function(params){
-	// Check dependencies (should be programmatic)
-	if(this.defaultPath === null){
-		console.err("Should not be calling generateSewnFlattenedPath without a defaultPath");
-		return;
-	}
-	
-	if(this.simplifiedPath === null){
-		console.err("Should not be calling generateSewnFlattenedPath without a simplifiedPath");
-		return;
-	}
-
-	if(this.flattenedPath === null){
-		console.err("Should not be calling generateSewnFlattenedPath without a flattenedPath");
-		return;
-	}
-
-	// Clean up old, dirty path (should be programmatic)
-	if(this.sewnFlattenedPath !== null){
-		this.sewnFlattenedPath.remove();
-		this.sewnFlattenedPath = null;
-	}
-
-	this.sewnFlattenedPath = new Path(this.plotPathPointsOnDistance(this.flattenedPath));
-	this.sewnFlattenedPath.strokeColor = 'blue';
-	this.sewnFlattenedPath.opacity = 1;
-	console.log("generatedToSewnFlattenedPath complete with length " + this.sewnFlattenedPath.segments.length);
+Design.prototype.generateSewnPath = function(params){
+	// plots sewn paths for specific input paths in params
 };
-
-
-Design.prototype.generateSewnDesignPath = function(params){
-	// Check dependencies (should be programmatic)
-	if(this.defaultPath === null){
-		console.err("Should not be calling generateSewnFlattenedPath without a defaultPath");
-		return;
-	}
-	
-	if(this.simplifiedPath === null){
-		console.err("Should not be calling generateSewnFlattenedPath without a simplifiedPath");
-		return;
-	}
-
-	if(this.designPath === null){
-		console.err("Should not be calling generateSewnFlattenedPath without a flattenedPath");
-		return;
-	}
-
-	// Clean up old, dirty path (should be programmatic)
-	if(this.sewnDesignPath !== null){
-		this.sewnDesignPath.remove();
-		this.sewnDesignPath = null;
-	}
-
-	this.sewnDesignPath = new Path(this.plotPathPointsOnDistance(this.designPath));
-	this.sewnDesignPath.strokeColor = 'blue';
-	this.sewnDesignPath.opacity = 1;
-	console.log("generatedToSewnDesignPath complete with length " + this.sewnDesignPath.segments.length);
-};
-
-///////////////////////////////////////////////////////////////////////////////////////
-//////////// Helpers for Path Translation /////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////
 
 // Make sure to update/set visability after calling this function!
-Design.prototype.regeneratePaths = function(params){
-	if(params === undefined){
-		if(this.defaultPath === null){
-			console.err("Cannot regenerate a path from no params and no defaultPath");
-			return;
-		} 
-	} else {
-		if(params.path !== undefined){
-			// Clean up our canvas!
-			if(this.defaultPath !== null) this.defaultPath.remove();
-			this.defaultPath = params.path.clone();
+Design.prototype.regenerateAllDerivitivePaths = function(){
+	// Loops through all DesignPaths
+	// re-generates all flattened & simplified derivitive paths
+	// all paths should be clean & designPath should be ready to be overwritten
 	
-		} else {
-			// Params.path is null, just assume we already have one saved and go on...
-		}
-	}
-	// By this point, the default path has been set one way or another, or we forgot to set it ;)
+	/* Old:
+	 * // By this point, the default path has been set one way or another, or we forgot to set it ;)
 	this.generateSimplifiedPath(params);
 	this.generateFlattenedPath(params);
 	this.generateSewnFlattenedPath(params);
@@ -267,7 +60,12 @@ Design.prototype.regeneratePaths = function(params){
 	this.generateSewnDesignPath(params);
 	
 	//this.testAbsSinDesign(0.3, 4);
+	 */
 };
+
+///////////////////////////////////////////////////////////////////////////////////////
+//////////// Helpers for Path Translation /////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
 
 // Returns: a new list of points that are based on the input path, with points placed
 // the sewn distance by pixels apart as a max goal. May be shortened in order to
@@ -275,6 +73,7 @@ Design.prototype.regeneratePaths = function(params){
 // TODO: relaxation settings should allow us to round off points based on an allowance
 // 		Doesn't Paper.js do this? Should this be just done on the design path directly?
 // 
+/*
 Design.prototype.plotPathPointsOnDistance = function(path){
 	if(path == null){
 		console.err("Cannot plotPathPointsOnDistance for a null path");
@@ -301,42 +100,22 @@ Design.prototype.plotPathPointsOnDistance = function(path){
 	
 	console.log("plotted sewn points on disance", plottedPoints);
 	return plottedPoints;
-}
+}*/
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //////////// UI on the Paths //////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////
 
 Design.prototype.hideAndDeselectAllPaths = function(){
-	if(this.defaultPath !== null){
-		this.defaultPath.selected = false;
-		this.defaultPath.visible = false;
-	}
-	if(this.simplifiedPath !== null){
-		this.simplifiedPath.selected = false;
-		this.simplifiedPath.visible = false;
-	}
-	if(this.flattenedPath !== null){
-		this.flattenedPath.selected = false;
-		this.flattenedPath.visible = false;
-	}
-	if(this.designPath !== null){
-		this.designPath.selected = false;
-		this.designPath.visible = false;
-	}
-	if(this.sewnDesignPath !== null){
-		this.sewnDesignPath.selected = false;
-		this.sewnDesignPath.visible = false;
-	}
-	if(this.sewnFlattenedPath !== null){
-		this.sewnFlattenedPath.selected = false;
-		this.sewnFlattenedPath.visible = false;
-	}
+	// For each designPath, hide and deselect them
 };
 
 // These strings are set in INDEX.HTML WHAT?!
 Design.prototype.showAndSelectPath = function(selected){
-	if(selected === "path-complex"){
+	// Find which paths in which designPaths need to be shown
+	// based on the strings sent from index.html
+	
+	/*if(selected === "path-complex"){
 		this.defaultPath.selected = true;
 		this.defaultPath.visible = true;
 	} else if (selected === "path-simple"){
@@ -357,9 +136,10 @@ Design.prototype.showAndSelectPath = function(selected){
 	} else {
 		// Haha! It's none of them!
 		console.log("Called showAndSelectPath on a design with selected", selected);
-	}
+	}*/
 };
 
+/*
 // Can be done of any paperjs path
 // NOTE: THIS DESTROYS ANY PREVIOUS PATH POINTS!!
 Design.prototype.parsePathToPoints = function(path){
@@ -374,12 +154,13 @@ Design.prototype.parsePathToPoints = function(path){
 	// DIRTY!!!! EVERYTHING IS DIRTY!
 	console.log(this.pathPoints);
 };
-
+*/
+/*
 Design.prototype.generatePathPoints = function(path){
 	this.parsePathToPoints(path);
 	this.roundPathPoints();
 	
-};
+};*/
 
 ////////////////////////////////////////////////////////////////////////
 /////// DESIGN DIMENSIONS //////////////////////////////////////////////
@@ -387,6 +168,7 @@ Design.prototype.generatePathPoints = function(path){
 
 // TO DO: BASED ON OTHER POINTS
 Design.prototype.calcDimensionsBasedOnPathPoints = function(){
+	/*
 	this.dimensions = {smallX: 999999, bigX: -999999, 
 					   smallY: 999999, bigY: -999999, 
 					   width: -1, height: -1};
@@ -399,21 +181,8 @@ Design.prototype.calcDimensionsBasedOnPathPoints = function(){
 	}
 	
 	this.dimensions.width = this.dimensions.bigX - this.dimensions.smallX;
-	this.dimensions.height = this.dimensions.bigY - this.dimensions.smallY;
+	this.dimensions.height = this.dimensions.bigY - this.dimensions.smallY;*/
 };
-
-Design.prototype.calcDistanceOfPathPoints = function(){
-	var totalDist = 0;
-	
-	// i < length -1 for i to i+1 distance...
-	for(var i = 0; i < this.pathPoints.length-1; i++){
-		totalDist += this.pathPoints[i].getDistance(this.pathPoints[i+1]);
-	}
-	
-	if(this.verbose) console.log("Total distance calculated ", totalDist);
-	return totalDist;
-};
-
 
 ////////////////////////////////////////////////////////////////////////
 /////// DESIGN GENERATION //////////////////////////////////////////////
