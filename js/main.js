@@ -1,6 +1,7 @@
 var global = {
 	mainCanvasHandler: null,
 	mainDesignHandler: null,
+	mainDesignGenerator: null,
 	calcHeight: 0,
 	calcWidth: 0,
 	designCount: 0,
@@ -38,6 +39,9 @@ var initDesignHandler = function(){
 	global.mainDesignHandler = new DesignHandler();
 };
 
+var initDesignGenerator = function(){
+	global.mainDesignGenerator = new DesignGenerator();
+};
 
 ///////////////////////////////////////////////////////
 /////////////// EVENT-BASED FUNCTIONS ////////////////
@@ -92,7 +96,9 @@ function displayFileImg(filename, evt) {
 $( document ).ready(function() {
 	// Import the rest of the functions
 	initCanvas(); // also initializes canvasHandler
+	initDesignGenerator();
 	initDesignHandler();
+	
 	initilizeMenus(); // in guiHandler.js 
 	// ^ !! NOTE !! Must be called after DesignHandler as it uses a function in the global.mainDesignHandler
 	

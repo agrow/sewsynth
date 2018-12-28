@@ -66,17 +66,21 @@ DesignHandler.prototype.addPaperJSPath = function(path){
 		console.err("Cannot add path to null activeDesign...", this.activeDesign, path);
 		return;
 	}
-	
-	this.activeDesign.regeneratePaths({	"path": path, 
+	this.activeDesign.makeNewPath(path);
+	this.activeDesign.regenerateAllDerivitivePaths({	
+										//"path": path,
 										tolerance: getValueOfSlider("lineSimplifierTolerance"),
 										flatness: getValueOfSlider("lineFlatness"),
-									    stitchLength: getValueOfSlider("edgeThreshold")});
+									    stitchLength: getValueOfSlider("edgeThreshold"),
+									    generateSeedPath: "flattenedPath"
+									    // Add any generation settings here
+									    });
 	console.log("default path size ", path.segments.length);
 	
 	// Now simplify the simplified path
 	//this.activeDesign.simplifiedPath.simplify(getValueOfSlider("lineSimplifierTolerance"));
 
-	console.log("simplified segment count ", this.activeDesign.simplifiedPath.segments.length);
+	//console.log("simplified segment count ", this.activeDesign.simplifiedPath.segments.length);
 	
 	// Then translate it to our design line
 	//this.activeDesign.pathPoints = parsePaperPathToPoints(this.activeDesign.simplifiedPath);
@@ -99,21 +103,61 @@ DesignHandler.prototype.addPaperJSPath = function(path){
 	console.log("paperJSPath imported to activeDesign complete"); //, path);
 };
 
+// Decores the index.html names for selection... for now. 
+// Used by updatePathSelection
+// designPath.js holds the formatting we're aiming for:
+ /* params={
+ * 	path: {sewn: false/true/"both"}
+ *  simplifiedPath: {sewn: false/true/"both"}
+ *  flattenedPath: {sewn: false/true/"both"}
+ * }
+ */
+// TODO: Selecting sewnPaths of these options...
+// 			There has to be a better way to do this...
+DesignHandler.prototype.parsePathSelection = function(selected){
+	var params = {};
+	
+	if(selected === "path-complex"){
+		params.path = {sewn: false}
+	} else if (selected === "path-simple"){
+		params.simplifiedPath = {sewn: false}
+	} else if (selected === "path-segmented"){
+		params.flattenedPath = {sewn: false}
+	} else if (selected === "path-generated-design"){
+		params.generatedPath = {sewn: false}
+	} else if (selected === "path-sew-segmented"){
+		params.flattenedPath = {sewn: true}
+	} else if (selected === "path-sew-generated"){
+		params.generatedPath = {sewn: true}
+	} else {
+		// Haha! It's none of them!
+		console.log("Called showAndSelectPath on a design with selected", selected);
+	}
+	console.log("parsed Params in designHandler", params);
+	
+	return params;
+};
+
 DesignHandler.prototype.updatePathSelection = function(selected){
 	console.log("updating path to select ", selected);
 	this.lastSelectedLineType = selected;
+	parsedSelection = this.parsePathSelection(selected);
+	console.log("updatePathSeletion ", parsedSelection);
+	console.log("this.designs", this.designs);
+	console.log("this.activeDesign", this.activeDesign);
 	
 	for(var i = 0; i < this.designs.length; i++){
 		// Deselect all
 		this.designs[i].hideAndDeselectAllPaths();
-		this.designs[i].showAndSelectPath(selected);
+		this.designs[i].showAndSelectPath(parsedSelection);
 	}
 	
 	// do it for the active design as well
 	// Deselect...
 	if(this.activeDesign !== null){
+		
 		this.activeDesign.hideAndDeselectAllPaths();
-		this.activeDesign.showAndSelectPath(selected);
+		this.activeDesign.showAndSelectPath(parsedSelection);
 	} else {
 		console.log("Cannot update selection for a null activeDesign...");
 	}

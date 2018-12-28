@@ -75,113 +75,6 @@
 	},
 	"buffers":
 	[
-		{
-			"file": "js/main.js",
-			"settings":
-			{
-				"buffer_size": 3017,
-				"encoding": "UTF-8",
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "js/guiHandler.js",
-			"settings":
-			{
-				"buffer_size": 5082,
-				"encoding": "UTF-8",
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "index.html",
-			"settings":
-			{
-				"buffer_size": 3057,
-				"encoding": "UTF-8",
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "js/designHandler.js",
-			"settings":
-			{
-				"buffer_size": 9686,
-				"encoding": "UTF-8",
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "js/design.js",
-			"settings":
-			{
-				"buffer_size": 25217,
-				"encoding": "UTF-8",
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"contents": "Searching 52 files for \"simplify(\"\n\nC:\\Users\\User\\Aptana\\SewSynth\\sewsynth\\js\\design.js:\n  138  \tif(params === undefined || params.tolerance === undefined){\n  139  \t\tconsole.log(\"using default path settings in generateSimplifidPath\", params);\n  140: \t\tthis.simplifiedPath.simplify();\n  141  \t} else {\n  142: \t\tthis.simplifiedPath.simplify(params.tolerance);\n  143  \t}\n  144  };\n\nC:\\Users\\User\\Aptana\\SewSynth\\sewsynth\\js\\designHandler.js:\n   74  \t\n   75  \t// Now simplify the simplified path\n   76: \t//this.activeDesign.simplifiedPath.simplify(getValueOfSlider(\"lineSimplifierTolerance\"));\n   77  \n   78  \tconsole.log(\"simplified segment count \", this.activeDesign.simplifiedPath.segments.length);\n\n3 matches across 2 files\n",
-			"settings":
-			{
-				"buffer_size": 724,
-				"line_ending": "Windows",
-				"name": "Find Results",
-				"scratch": true
-			}
-		},
-		{
-			"contents": "var DesignPath = function(){\n\t\n\treturn this;\n};",
-			"file": "js/designPath.js",
-			"file_size": 49,
-			"file_write_time": 131686327183794547,
-			"settings":
-			{
-				"buffer_size": 47,
-				"line_ending": "Windows",
-				"name": "var DesignPath = function(){"
-			}
-		},
-		{
-			"file": "/C/Users/User/OneDrive/Phaser/phaser/myGame/js/main.js",
-			"settings":
-			{
-				"buffer_size": 6049,
-				"encoding": "UTF-8",
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"contents": "<!DOCTYPE html> \n<html lang=\"en\"> \n<head> \n\t<meta charset=\"UTF-8\" />\n\n\t\n\t<title> Wild West Wolf </title>\n\n\t<script type=\"text/javascript\" src=\"../framework/phaser.min.js\"></script>\n\t<script type=\"text/javascript\" src=\"js/main.js\"></script>\n\t\n\n\t<link rel=\"stylesheet\" type=\"text/css\" href=\"css/styles.css\">\n</head>\n<body>\n\t<h1>Wild West Wolf <h1/>\t\n\n\t\n</body>\n</html>",
-			"file": "/C/Users/User/OneDrive/Phaser/phaser/testgame/index.html",
-			"file_size": 359,
-			"file_write_time": 131685612182709676,
-			"settings":
-			{
-				"buffer_size": 366,
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "/C/Users/User/OneDrive/Phaser/phaser/testgame/js/main.js",
-			"settings":
-			{
-				"buffer_size": 7340,
-				"encoding": "UTF-8",
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"contents": "{\n  \"frames\": {\n    \"PlayerCharacter2\": {\n      \"frame\": {\n        \"x\": 0,\n        \"y\": 0,\n        \"w\": 128,\n        \"h\": 128\n      },\n      \"rotated\": false,\n      \"trimmed\": false,\n      \"spriteSourceSize\": {\n        \"x\": 0,\n        \"y\": 0,\n        \"w\": 128,\n        \"h\": 128\n      },\n      \"sourceSize\": {\n        \"w\": 128,\n        \"h\": 128\n      }\n    },\n    \"water\": {\n      \"frame\": {\n        \"x\": 129,\n        \"y\": 0,\n        \"w\": 64,\n        \"h\": 64\n      },\n      \"rotated\": false,\n      \"trimmed\": false,\n      \"spriteSourceSize\": {\n        \"x\": 0,\n        \"y\": 0,\n        \"w\": 64,\n        \"h\": 64\n      },\n      \"sourceSize\": {\n        \"w\": 64,\n        \"h\": 64\n      }\n    },\n    \"bees\": {\n      \"frame\": {\n        \"x\": 129,\n        \"y\": 65,\n        \"w\": 64,\n        \"h\": 64\n      },\n      \"rotated\": false,\n      \"trimmed\": false,\n      \"spriteSourceSize\": {\n        \"x\": 0,\n        \"y\": 0,\n        \"w\": 64,\n        \"h\": 64\n      },\n      \"sourceSize\": {\n        \"w\": 64,\n        \"h\": 64\n      }\n    },\n    \"dirt\": {\n      \"frame\": {\n        \"x\": 129,\n        \"y\": 130,\n        \"w\": 64,\n        \"h\": 64\n      },\n      \"rotated\": false,\n      \"trimmed\": false,\n      \"spriteSourceSize\": {\n        \"x\": 0,\n        \"y\": 0,\n        \"w\": 64,\n        \"h\": 64\n      },\n      \"sourceSize\": {\n        \"w\": 64,\n        \"h\": 64\n      }\n    },\n    \"Flower1\": {\n      \"frame\": {\n        \"x\": 194,\n        \"y\": 0,\n        \"w\": 64,\n        \"h\": 64\n      },\n      \"rotated\": false,\n      \"trimmed\": false,\n      \"spriteSourceSize\": {\n        \"x\": 0,\n        \"y\": 0,\n        \"w\": 64,\n        \"h\": 64\n      },\n      \"sourceSize\": {\n        \"w\": 64,\n        \"h\": 64\n      }\n    },\n    \"Flower2\": {\n      \"frame\": {\n        \"x\": 194,\n        \"y\": 65,\n        \"w\": 64,\n        \"h\": 64\n      },\n      \"rotated\": false,\n      \"trimmed\": false,\n      \"spriteSourceSize\": {\n        \"x\": 0,\n        \"y\": 0,\n        \"w\": 64,\n        \"h\": 64\n      },\n      \"sourceSize\": {\n        \"w\": 64,\n        \"h\": 64\n      }\n    },\n    \"Flower3\": {\n      \"frame\": {\n        \"x\": 194,\n        \"y\": 130,\n        \"w\": 64,\n        \"h\": 64\n      },\n      \"rotated\": false,\n      \"trimmed\": false,\n      \"spriteSourceSize\": {\n        \"x\": 0,\n        \"y\": 0,\n        \"w\": 64,\n        \"h\": 64\n      },\n      \"sourceSize\": {\n        \"w\": 64,\n        \"h\": 64\n      }\n    },\n    \"PlayerCharacter1\": {\n      \"frame\": {\n        \"x\": 0,\n        \"y\": 129,\n        \"w\": 128,\n        \"h\": 128\n      },\n      \"rotated\": false,\n      \"trimmed\": false,\n      \"spriteSourceSize\": {\n        \"x\": 0,\n        \"y\": 0,\n        \"w\": 128,\n        \"h\": 128\n      },\n      \"sourceSize\": {\n        \"w\": 128,\n        \"h\": 128\n      }\n    }\n  },\n  \"meta\": {\n    \"app\": \"https://www.leshylabs.com/apps/sstool/\",\n    \"version\": \"Leshy SpriteSheet Tool v0.8.4\",\n    \"image\": \"plantingAtlas.png\",\n    \"size\": {\n      \"w\": 258,\n      \"h\": 257\n    },\n    \"scale\": 1\n  }\n}",
-			"file": "/C/Users/User/OneDrive/Phaser/phaser/myGame/assets/img/plantingJSON.json",
-			"file_size": 1463,
-			"file_write_time": 131691670060812548,
-			"settings":
-			{
-				"buffer_size": 2905,
-				"line_ending": "Windows"
-			}
-		}
 	],
 	"build_system": "",
 	"build_system_choices":
@@ -223,20 +116,29 @@
 	},
 	"expanded_folders":
 	[
-		"/C/Users/User/Aptana/SewSynth/sewsynth"
 	],
 	"file_history":
 	[
+		"/C/Users/User/OneDrive/Phaser/phaser/myGame/assets/img/plantingJSON.json",
+		"/C/Users/User/OneDrive/Pictures/120Lecture/phaserDemo/webpage.txt",
 		"/C/Users/User/OneDrive/Phaser/phaser/webpage.txt",
+		"/C/Users/User/OneDrive/Phaser/phaser/testgame/js/main.js",
+		"/C/Users/User/OneDrive/Phaser/phaser/testgame/index.html",
+		"/C/Users/User/OneDrive/Phaser/phaser/myGame/js/main.js",
+		"/C/Users/User/Aptana/SewSynth/sewsynth/js/designPath.js",
+		"/C/Users/User/Aptana/SewSynth/sewsynth/js/design.js",
+		"/C/Users/User/Aptana/SewSynth/sewsynth/js/designHandler.js",
+		"/C/Users/User/Aptana/SewSynth/sewsynth/index.html",
+		"/C/Users/User/Aptana/SewSynth/sewsynth/js/guiHandler.js",
+		"/C/Users/User/Aptana/SewSynth/sewsynth/js/main.js",
 		"/C/Users/User/Aptana/SewSynth/sewsynth/webpage.txt",
 		"/C/Users/User/OneDrive/Phaser/phaser/myGame/index.html",
-		"/C/Users/User/OneDrive/Phaser/phaser/myGame/js/main.js",
 		"/C/Users/User/OneDrive/Phaser/bootstrap/phaser/myGame/js/main.js",
 		"/C/Users/User/OneDrive/Phaser/bootstrap/phaser/myGame/index.html"
 	],
 	"find":
 	{
-		"height": 23.0
+		"height": 27.0
 	},
 	"find_in_files":
 	{
@@ -331,356 +233,14 @@
 	"groups":
 	[
 		{
-			"selected": 9,
 			"sheets":
 			[
-				{
-					"buffer": 0,
-					"file": "js/main.js",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 3017,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								211,
-								225
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/JavaScript/JavaScript.sublime-syntax"
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 10,
-					"type": "text"
-				},
-				{
-					"buffer": 1,
-					"file": "js/guiHandler.js",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 5082,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								5082,
-								5082
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/JavaScript/JavaScript.sublime-syntax",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 1207.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 9,
-					"type": "text"
-				},
-				{
-					"buffer": 2,
-					"file": "index.html",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 3057,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								2346,
-								2328
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/HTML/HTML.sublime-syntax",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 7,
-					"type": "text"
-				},
-				{
-					"buffer": 3,
-					"file": "js/designHandler.js",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 9686,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								4480,
-								4480
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/JavaScript/JavaScript.sublime-syntax",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 1590.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 5,
-					"type": "text"
-				},
-				{
-					"buffer": 4,
-					"file": "js/design.js",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 25217,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								8955,
-								8955
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/JavaScript/JavaScript.sublime-syntax",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 3595.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 4,
-					"type": "text"
-				},
-				{
-					"buffer": 5,
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 724,
-						"regions":
-						{
-							"match":
-							{
-								"flags": 112,
-								"regions":
-								[
-									[
-										272,
-										281
-									],
-									[
-										330,
-										339
-									],
-									[
-										535,
-										544
-									]
-								],
-								"scope": ""
-							}
-						},
-						"selection":
-						[
-							[
-								0,
-								0
-							]
-						],
-						"settings":
-						{
-							"detect_indentation": false,
-							"line_numbers": false,
-							"output_tag": 1,
-							"result_base_dir": "",
-							"result_file_regex": "^([^ \t].*):$",
-							"result_line_regex": "^ +([0-9]+):",
-							"scroll_past_end": true,
-							"syntax": "Packages/Default/Find Results.hidden-tmLanguage"
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 6,
-					"type": "text"
-				},
-				{
-					"buffer": 6,
-					"file": "js/designPath.js",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 47,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								47,
-								47
-							]
-						],
-						"settings":
-						{
-							"auto_name": "var DesignPath = function(){",
-							"syntax": "Packages/JavaScript/JavaScript.sublime-syntax"
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 8,
-					"type": "text"
-				},
-				{
-					"buffer": 7,
-					"file": "/C/Users/User/OneDrive/Phaser/phaser/myGame/js/main.js",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 6049,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								1153,
-								1153
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/JavaScript/JavaScript.sublime-syntax",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 403.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 2,
-					"type": "text"
-				},
-				{
-					"buffer": 8,
-					"file": "/C/Users/User/OneDrive/Phaser/phaser/testgame/index.html",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 366,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								366,
-								366
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/HTML/HTML.sublime-syntax"
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 1,
-					"type": "text"
-				},
-				{
-					"buffer": 9,
-					"file": "/C/Users/User/OneDrive/Phaser/phaser/testgame/js/main.js",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 7340,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								7340,
-								7340
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/JavaScript/JavaScript.sublime-syntax",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 2008.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 0,
-					"type": "text"
-				},
-				{
-					"buffer": 10,
-					"file": "/C/Users/User/OneDrive/Phaser/phaser/myGame/assets/img/plantingJSON.json",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 2905,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								2813,
-								2830
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/JavaScript/JSON.sublime-syntax"
-						},
-						"translation.x": 0.0,
-						"translation.y": 765.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 3,
-					"type": "text"
-				}
 			]
 		}
 	],
 	"incremental_find":
 	{
-		"height": 23.0
+		"height": 27.0
 	},
 	"input":
 	{
@@ -717,7 +277,7 @@
 	"project": "sewsynth.sublime-project",
 	"replace":
 	{
-		"height": 42.0
+		"height": 50.0
 	},
 	"save_all_on_build": true,
 	"select_file":
