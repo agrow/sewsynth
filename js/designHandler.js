@@ -63,44 +63,30 @@ DesignHandler.prototype.closeActiveDesign = function(xPos, yPos){
 
 DesignHandler.prototype.addPaperJSPath = function(path){
 	if(this.activeDesign === null){
-		console.err("Cannot add path to null activeDesign...", this.activeDesign, path);
+		console.log("Cannot add path to null activeDesign...", this.activeDesign, path);
+		global.mainErrorHandler.errorMsg("null activeDesign", this);
 		return;
 	}
 	this.activeDesign.makeNewPath(path);
-	this.activeDesign.regenerateAllDerivitivePaths({	
-										//"path": path,
-										tolerance: getValueOfSlider("lineSimplifierTolerance"),
-										flatness: getValueOfSlider("lineFlatness"),
-									    stitchLength: getValueOfSlider("edgeThreshold"),
-									    generateSeedPath: "flattenedPath"
-									    // Add any generation settings here
-									    });
-	console.log("default path size ", path.segments.length);
+	try{
+		// If these path parameters ever change, make sure to change them in regenerateAllDerivedPaths
+		this.activeDesign.regenerateAllDerivitivePaths({	
+											//"path": path,
+											tolerance: getValueOfSlider("lineSimplifierTolerance"),
+											flatness: getValueOfSlider("lineFlatness"),
+										    stitchLength: getValueOfSlider("edgeThreshold"),
+										    generateSeedPath: "flattenedPath"
+										    // Add any generation settings here
+										    });
+		console.log("default path size ", path.segments.length);
+		
 	
-	// Now simplify the simplified path
-	//this.activeDesign.simplifiedPath.simplify(getValueOfSlider("lineSimplifierTolerance"));
-
-	//console.log("simplified segment count ", this.activeDesign.simplifiedPath.segments.length);
-	
-	// Then translate it to our design line
-	//this.activeDesign.pathPoints = parsePaperPathToPoints(this.activeDesign.simplifiedPath);
-	
-	//this.activeDesign.flattenedPath = this.activeDesign.simplifiedPath.clone();
-	//this.activeDesign.flattenedPath.flatten(1);
-	// Then apply some design xform
-	
-	//this.activeDesign.parsePathToPoints(this.activeDesign.flattenedPath);
-	//console.log("pathPoints from flattened path ", this.activeDesign.pathPoints.length);
-	
-	// Prep to print
-	//this.activeDesign.roundPathPoints(); // Makes printing and sewing clearer/easier. BW was always in integers
-	//this.activeDesign.calcDimensionsBasedOnPathPoints();
-	// SHOULD BE DONE OUT OF HERE
-	//this.saveAllDesignsToFile();
-	// added to save button .click()
-	this.updatePathSelection(this.lastSelectedLineType);
-	
-	console.log("paperJSPath imported to activeDesign complete"); //, path);
+		this.updatePathSelection(this.lastSelectedLineType);
+		
+		console.log("paperJSPath imported to activeDesign complete"); //, path);
+	} catch (e) {
+		global.mainErrorHandler.error(e);
+	}
 };
 
 // Decores the index.html names for selection... for now. 
@@ -118,17 +104,17 @@ DesignHandler.prototype.parsePathSelection = function(selected){
 	var params = {};
 	
 	if(selected === "path-complex"){
-		params.path = {sewn: false}
+		params.path = {sewn: false};
 	} else if (selected === "path-simple"){
-		params.simplifiedPath = {sewn: false}
+		params.simplifiedPath = {sewn: false};
 	} else if (selected === "path-segmented"){
-		params.flattenedPath = {sewn: false}
+		params.flattenedPath = {sewn: false};
 	} else if (selected === "path-generated-design"){
-		params.generatedPath = {sewn: false}
+		params.generatedPath = {sewn: false};
 	} else if (selected === "path-sew-segmented"){
-		params.flattenedPath = {sewn: true}
+		params.flattenedPath = {sewn: true};
 	} else if (selected === "path-sew-generated"){
-		params.generatedPath = {sewn: true}
+		params.generatedPath = {sewn: true};
 	} else {
 		// Haha! It's none of them!
 		console.log("Called showAndSelectPath on a design with selected", selected);
@@ -163,31 +149,71 @@ DesignHandler.prototype.updatePathSelection = function(selected){
 	}
 };
 
+// "ref" should be either be "activePath" or an id number for those designs in this.designs
+// "inputParams" should be a valid path spec: tolerance, flatness, stitchLength, generateSeedPath
+DesignHandler.prototype.regenerateSpecificDesignPaths = function(ref, params){
+	if(ref === undefined){
+		global.mainErrorHandler.errorMsg("cannot regenerateSpecificDesignPaths with null ref", this, e);
+		return null;
+	}
+	if(ref == "activeDesign"){
+		if(this.activeDesign === null){
+			global.mainErrorHandler.errorMsg("cannot regenerateSpecificDesignPaths with null activeDesign", this, e);
+			return null;
+		}
+		try {
+			this.activeDesign.regenerateAllDerivitivePaths(params);
+		} catch (e){
+			global.mainErrorHandler.errorMsg("1 regenerateSpecificDesignPaths failed to generate with ref " + ref, this, e);
+			return null;
+		}
+	} else if (!isNaN(ref)) {
+		try {
+			this.designs[ref].regenerateAllDerivitivePaths(params);
+		} catch (e){
+			global.mainErrorHandler.errorMsg("2 regenerateSpecificDesignPaths failed to generate with ref " + ref, this, e);
+			return null;
+		}
+		
+	} else {
+		global.mainErrorHandler.errorMsg("3 regenerateSpecificDesignPaths failed to generate with ref " + ref, this, e);
+		return null;
+	}
+};
+
 DesignHandler.prototype.regenerateAllDerivedPaths = function(inputParams){
 	var params = {};
 	if(inputParams === undefined){
 		// Grab the slider parts, regenerate and make from existing path
+		// If these path parameters ever change, make sure to change them in addPaperJSPath
 		params = {
 			tolerance: getValueOfSlider("lineSimplifierTolerance"),
 			flatness: getValueOfSlider("lineFlatness"),
-			stitchLength: getValueOfSlider("edgeThreshold")
+			stitchLength: getValueOfSlider("edgeThreshold"),
+			generateSeedPath: "flattenedPath"
 		};
 	} else {
 		// NOTE: This should only be called when generateAllDerivedPaths is called on the activeDesign
 		// otherwise, it would possibly set the path of other designs, WHICH WOULD BE BAD!!!
-		console.log("!! Dangerous, calling regenerateAllPaths with params !!");
+		console.log("!! calling regenerateAllPaths with custom params !!");
 		params = inputParams;
 	}
-	console.log("regenerateAllDerivedPaths with new parameters", params);
+	console.log("***** regenerateAllDerivedPaths with parameters", params);
 	
-	for(var i = 0; i < this.designs.length; i++){
-		this.designs[i].regeneratePaths(params);
-		//this.designs[i].prepForPrint(); // honestly should just be done when we're printing...
-	}
-	
-	if(this.activeDesign !== null){
-	// do it for the active design as well, if it's not null...
-		this.activeDesign.regeneratePaths(params);
+	try{
+		if(this.activeDesign !== null){
+		// do it for the active design as well, if it's not null...
+			this.regenerateSpecificDesignPaths("activeDesign", params);
+		}
+		console.log("2 designHandler: activeDesign", this.activeDesign);
+		for(var i = 0; i < this.designs.length; i++){
+			this.regenerateSpecificDesignPaths(i, params);
+			//this.designs[i].prepForPrint(); // honestly should just be done when we're printing...
+		}
+		
+		
+	} catch (e) {
+		global.mainErrorHandler.error(e);
 	}
 	// Then update their visability...
 	this.updatePathSelection(this.lastSelectedLineType);

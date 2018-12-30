@@ -1,4 +1,6 @@
 var global = {
+	mainErrorHandler: null,
+	mainHistoryHandler: null,
 	mainCanvasHandler: null,
 	mainDesignHandler: null,
 	mainDesignGenerator: null,
@@ -41,6 +43,14 @@ var initDesignHandler = function(){
 
 var initDesignGenerator = function(){
 	global.mainDesignGenerator = new DesignGenerator();
+};
+
+var initErrorHandler = function(){
+	global.mainErrorHandler = new ErrorHandler();
+};
+
+var initHistoryHandler = function(){
+	global.mainHistoryHandler = new HistoryHandler();
 };
 
 ///////////////////////////////////////////////////////
@@ -94,16 +104,23 @@ function displayFileImg(filename, evt) {
 
 
 $( document ).ready(function() {
-	// Import the rest of the functions
-	initCanvas(); // also initializes canvasHandler
-	initDesignGenerator();
-	initDesignHandler();
 	
-	initilizeMenus(); // in guiHandler.js 
-	// ^ !! NOTE !! Must be called after DesignHandler as it uses a function in the global.mainDesignHandler
+	try {
+		// Import the rest of the functions
+		initErrorHandler();
+		initHistoryHandler();
+		initCanvas(); // also initializes canvasHandler
+		initDesignGenerator();
+		initDesignHandler();
+		
+		initilizeMenus(); // in guiHandler.js 
+		// ^ !! NOTE !! Must be called after DesignHandler as it uses a function in the global.mainDesignHandler
+		
+		// Move the menus over... need to also update this on resize...
+		updateMenuPositions();
+		console.log( "ready!" );
+	} catch (e){
+		alert("catastrophic failure -- initialization failed");
+	}
 	
-	// Move the menus over... need to also update this on resize...
-	updateMenuPositions();
-	
-	console.log( "ready!" );
 });

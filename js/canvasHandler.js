@@ -40,9 +40,12 @@ var CanvasHandler = function(canvasID){
 	this.drawingTool.onMouseUp = function(event){
 		//console.log("mouseup", path);
 		path.selected = false;
-		global.mainDesignHandler.makeAndSetNewDesign();
-		global.mainDesignHandler.addPaperJSPath(path);
-		
+		try{
+			global.mainDesignHandler.makeAndSetNewDesign();
+			global.mainDesignHandler.addPaperJSPath(path);
+		} catch (e){
+			global.mainErrorHandler.error(e);
+		}
 		
 		//console.log("deselected", path);
 	};

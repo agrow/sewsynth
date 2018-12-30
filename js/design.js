@@ -29,12 +29,16 @@ var Design = function() {
 // path should be a paper.js path
 Design.prototype.makeNewPath = function(path){
 	var newPath = null;
+	try {
 	if(path !== undefined && path !== null){
 		newPath = new DesignPath(this, path);
 	} else {
 		newPath = new DesignPath(this);
 	}
 	this.paths.push(newPath);
+	} catch (e) {
+		global.mainErrorHandler.error(e);
+	}
 	console.log("makeNewPath", newPath);
 	return newPath;
 };
@@ -55,11 +59,14 @@ Design.prototype.regenerateAllDerivitivePaths = function(params){
 	// all paths should be clean & generatedPath should be ready to be overwritten
 	
 	console.log("regenerateAllDerivitivePaths,", params, this.paths);
-	for(var i = 0; i < this.paths.length; i++){
-		this.paths[i].regenerateAllPaths(params);
-		// TODO: this.testRelativeDesign() & this.testAsbSinDesign(0.3,4);
+	try{
+		for(var i = 0; i < this.paths.length; i++){
+			this.paths[i].regenerateAllPaths(params);
+			// TODO: this.testRelativeDesign() & this.testAsbSinDesign(0.3,4);
+		}
+	} catch (e) {
+		global.mainErrorHandler.error(e);
 	}
-	
 	/* Old:
 	 * // By this point, the default path has been set one way or another, or we forgot to set it ;)
 	this.generateSimplifiedPath(params);

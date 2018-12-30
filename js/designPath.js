@@ -38,7 +38,7 @@ paper.Path.prototype.reportDisplay = function(){
 		selected: this.selected,
 	};
 	return result;
-}
+};
 
 paper.Path.prototype.reportDisplayString = function(separator){
 	var resultDisplay = this.reportDisplay();
@@ -60,7 +60,7 @@ paper.Path.prototype.reportDisplayString = function(separator){
 paper.Path.prototype.stringifyPoints = function(separator){
 	console.log(this);
 	var result = "";
-	result += "[" + this.segments.length + "]: "
+	result += "[" + this.segments.length + "]: ";
 		
 	for(var i = 0; i < this.segments.length; i++){
 		if(separator === undefined || separator === null){
@@ -357,7 +357,7 @@ DesignPath.prototype.setLastUsedLineParams = function(params){
 // Post: Non-null paths are set as hidden
 DesignPath.prototype.setAllPathsHidden = function(){
 	if(this.paperPath !== null){
-		console.log("setting path invisible", key);
+		console.log("setting path invisible paperPath");
 		this.paperPath.visible = false;
 		if(this.paperPath.sewnPath !== undefined && this.paperPath.sewnPath !== null){
 			this.paperPath.sewnPath.visible = false;
@@ -384,7 +384,7 @@ DesignPath.prototype.setAllPathsHidden = function(){
 // Post: Non-null paths are set as not selected
 DesignPath.prototype.setAllPathsDeselected = function(){
 	if(this.paperPath !== null){
-		console.log("setting path deselected", key);
+		console.log("setting path deselected paperPath");
 		this.paperPath.selected = false;
 		if(this.paperPath.sewnPath !== undefined && this.paperPath.sewnPath !== null){
 			this.paperPath.sewnPath.selected = false;
