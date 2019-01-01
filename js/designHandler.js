@@ -1,6 +1,8 @@
 
 var DesignHandler = function(){
 	this.designs = [];
+	// DRASTIC DESIGN CHANGE:
+	// "activeDesign" will now be an index for this.designs, not a seperate design
 	this.activeDesign = null;
 	this.scale = 2;
 	
@@ -24,12 +26,9 @@ var DesignHandler = function(){
 	// printing design(s) to fabric,
 	// calling other operations on design(s),
 
-// Call on mouseDown? Or after the path has been completed if doing batch method
-// Safely cleans up the old designs and starts a new one. Meant to be called by outside functions...
-// Post: this.activeDesign == empty new design
 DesignHandler.prototype.makeAndSetNewDesign = function(){
-	this.closeActiveDesign(); // Does nothing if active design is already null
-	this.activeDesign = new Design();
+	this.designs.push(new Design());
+	this.activeDesign = this.designs.length -1;
 }; // makeAndSetNewDesign
 
 // called on mouseDown & mouseDrag? Or just on loop when parsing paper.js path
@@ -43,34 +42,19 @@ DesignHandler.prototype.addPointToActiveDesign = function(xPos, yPos){
 	
 }; // addPointToActiveDesign
 
-// called on mouseUp to trigger next mouseDown to make new design
-// Pre: 
-// Post: this.activeDesign == null
-DesignHandler.prototype.closeActiveDesign = function(xPos, yPos){
-	// If we are closing it AT a point, add that point as a closure
-	// Note that addPoint will fail if the active design is null
-	if(xPos !== undefined && xPos !== null && yPos !== undefined && yPos !== null){
-		this.addPointToActiveDesign(xPos, yPos);
-	}
-	
-	// If the activeDesign is not null, save it and set it to null
-	if(this.activeDesign !== null){
-		this.designs.push(this.activeDesign);
-		this.activeDesign = null;
-	}
-	
-}; // closeActiveDesign
 
 DesignHandler.prototype.addPaperJSPath = function(path){
-	if(this.activeDesign === null){
-		console.log("Cannot add path to null activeDesign...", this.activeDesign, path);
+	if(this.designs[this.activeDesign] === null){
+		console.log("Cannot add path to null activeDesign...", this.designs[this.activeDesign], path);
 		global.mainErrorHandler.errorMsg("null activeDesign", this);
 		return;
 	}
-	this.activeDesign.makeNewPath(path);
+	console.log(this.designs);
+	console.log(this.activeDesign);
+	this.designs[this.activeDesign].makeNewPath(path);
 	try{
 		// If these path parameters ever change, make sure to change them in regenerateAllDerivedPaths
-		this.activeDesign.regenerateAllDerivitivePaths({	
+		this.designs[this.activeDesign].regenerateAllDerivitivePaths({	
 											//"path": path,
 											tolerance: getValueOfSlider("lineSimplifierTolerance"),
 											flatness: getValueOfSlider("lineFlatness"),
@@ -130,7 +114,7 @@ DesignHandler.prototype.updatePathSelection = function(selected){
 	parsedSelection = this.parsePathSelection(selected);
 	console.log("updatePathSeletion ", parsedSelection);
 	console.log("this.designs", this.designs);
-	console.log("this.activeDesign", this.activeDesign);
+	console.log("this.designs[this.activeDesign]", this.designs[this.activeDesign]);
 	
 	for(var i = 0; i < this.designs.length; i++){
 		// Deselect all
@@ -140,10 +124,10 @@ DesignHandler.prototype.updatePathSelection = function(selected){
 	
 	// do it for the active design as well
 	// Deselect...
-	if(this.activeDesign !== null){
+	if(this.designs[this.activeDesign] !== null){
 		
-		this.activeDesign.hideAndDeselectAllPaths();
-		this.activeDesign.showAndSelectPath(parsedSelection);
+		this.designs[this.activeDesign].hideAndDeselectAllPaths();
+		this.designs[this.activeDesign].showAndSelectPath(parsedSelection);
 	} else {
 		console.log("Cannot update selection for a null activeDesign...");
 	}
@@ -157,12 +141,12 @@ DesignHandler.prototype.regenerateSpecificDesignPaths = function(ref, params){
 		return null;
 	}
 	if(ref == "activeDesign"){
-		if(this.activeDesign === null){
+		if(this.designs[this.activeDesign] === null){
 			global.mainErrorHandler.errorMsg("cannot regenerateSpecificDesignPaths with null activeDesign", this, e);
 			return null;
 		}
 		try {
-			this.activeDesign.regenerateAllDerivitivePaths(params);
+			this.designs[this.activeDesign].regenerateAllDerivitivePaths(params);
 		} catch (e){
 			global.mainErrorHandler.errorMsg("1 regenerateSpecificDesignPaths failed to generate with ref " + ref, this, e);
 			return null;
@@ -201,11 +185,11 @@ DesignHandler.prototype.regenerateAllDerivedPaths = function(inputParams){
 	console.log("***** regenerateAllDerivedPaths with parameters", params);
 	
 	try{
-		if(this.activeDesign !== null){
+		if(this.designs[this.activeDesign] !== null){
 		// do it for the active design as well, if it's not null...
 			this.regenerateSpecificDesignPaths("activeDesign", params);
 		}
-		console.log("2 designHandler: activeDesign", this.activeDesign);
+		console.log("2 designHandler: activeDesign", this.designs[this.activeDesign]);
 		for(var i = 0; i < this.designs.length; i++){
 			this.regenerateSpecificDesignPaths(i, params);
 			//this.designs[i].prepForPrint(); // honestly should just be done when we're printing...
