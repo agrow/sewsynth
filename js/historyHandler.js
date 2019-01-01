@@ -15,36 +15,35 @@ var Action = function(params, onDo, onUndo){
 }; 
 
 Action.prototype.toString = function(){
-	var str = "params: " + params;
+	var str = "";
 	
-	/*
-	for (var key in this.params) {
-	    // skip loop if the property is from prototype
-	    if (!this.params.hasOwnProperty(key)) continue;
+	if(this.params !== undefined){
+		str += "====== Action: " + this.params.tag + " ======\n";
+	}
+
+	str += ("Action params: \n");
 	
-	    if (this.params[key] !== null){
-	    	//str
-	    } 
-    }*/
-   
-   return str;
-};
-
-Action.prototype.fullPrint = function(){
-
-	console.log("Action params: ");
 	for (var key in this.params) {
 	    // skip loop if the property is from prototype
 	    if (!this.params.hasOwnProperty(key)) continue;
 	
 	    //if (this.params[key] !== null){
-	    console.log(key + ": ", this.params[key]);
+	    str += key + ": " + this.params[key] + "\n";
 	    //} 
     }
+   
+   return str + "\n";
+};
+
+Action.prototype.fullPrint = function(log){
+	if(this.params !== undefined){
+		console.log("====== Action: " + this.params.tag + " ======");
+	}
+
+	console.log("Action params: ", this.params);
+   
     console.log("onDo: ", this.onDo);
     console.log("onUndo: ", this.onUndo);
-   
-   return str;
 };
 
 /* HistoryHandler
@@ -75,6 +74,7 @@ HistoryHandler.prototype.doAction = function(action){
 	} catch (e) {
 		
 	}
+	this.log += action.toString();
 	this.addStack.push(action);
 };
 
@@ -87,12 +87,14 @@ HistoryHandler.prototype.doUndo = function(){
 	} catch (e) {
 		
 	}
+	this.log += "--- UNDO ---\n";
 	this.subStack.push(action);
 };
 
 // Pops an action from subStack & pushes it to addStack
 HistoryHandler.prototype.doRedo = function(){
 	var action = this.subStack.pop();
+	this.log += "--- REDO ---\n";
 	this.doAction(action);
 };
 
