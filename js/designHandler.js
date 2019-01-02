@@ -27,20 +27,8 @@ var DesignHandler = function(){
 	// calling other operations on design(s),
 
 DesignHandler.prototype.makeAndSetNewDesign = function(){
-	this.designs.push(new Design());
-	this.activeDesign = this.designs.length -1;
+	this.actionDesignCreate();
 }; // makeAndSetNewDesign
-
-// called on mouseDown & mouseDrag? Or just on loop when parsing paper.js path
-DesignHandler.prototype.addPointToActiveDesign = function(xPos, yPos){
-	if(this.activeDesign === null){
-		console.err("Cannot add point to active design because it is null", this.activeDesign);
-		return;
-	}
-	
-	var newPoint = this.activeDesign.addNewPoint(xPos, yPos);
-	
-}; // addPointToActiveDesign
 
 
 DesignHandler.prototype.addPaperJSPath = function(path){
@@ -49,8 +37,8 @@ DesignHandler.prototype.addPaperJSPath = function(path){
 		global.mainErrorHandler.errorMsg("null activeDesign", this);
 		return;
 	}
-	console.log(this.designs);
-	console.log(this.activeDesign);
+	//console.log(this.designs);
+	//console.log(this.activeDesign);
 	this.designs[this.activeDesign].makeNewPath(path);
 	try{
 		// If these path parameters ever change, make sure to change them in regenerateAllDerivedPaths
@@ -203,6 +191,64 @@ DesignHandler.prototype.regenerateAllDerivedPaths = function(inputParams){
 	this.updatePathSelection(this.lastSelectedLineType);
 };
 
+////////////////////////////////////////////////////////////////
+////////////////// DESIGN EVENT MANAGEMENT /////////////////////
+////////////////////////////////////////////////////////////////
+//
+// Most of this management is sending signals to its children designs
+// on when and how to regenerate a new path specification or just delete
+// them wholesale
+//
+// Includes:
+// Creating a design (path(s))
+// Editing a design (path(s))
+// Deleting a design (paths(s))
+
+DesignHandler.prototype.actionDesignCreate = function(params){
+	// REMEMER: "this" will be the action, not DesignHandler
+	// We send the params
+	var action = new Action(
+		// params
+		{obj: this},
+		// do
+		function(){
+			console.log("IN ACTIONDESIGNCREATE DO");
+			console.log(this);
+			console.log(this.params);
+			console.log(this.params.obj);
+			
+			this.params.obj.designs.push(new Design());
+			this.params.obj.activeDesign = this.params.obj.designs.length -1;
+		},
+		// undo
+		function(){
+			console.log("IN ACTIONDESIGNCREATE UNDO");
+			console.log(this);
+			console.log(this.params);
+			console.log(this.params.obj);
+			
+			var deletedDesign = this.params.obj.designs.pop();
+			console.log("deleting design ", deletedDesign);
+			this.params.obj.activeDesign = this.params.obj.designs.length -1;
+		}
+	);
+	
+	global.mainHistoryHandler.doAction(action);
+};
+
+// Includes movement, adding/subtracting points
+DesignHandler.prototype.actionDesignEdit = function(params){
+	
+};
+
+DesignHandler.prototype.actionDesignDelete = function(params){
+	
+};
+
+
+////////////////////////////////////////////////////////////////
+//////////// DESIGN OUTPUT/FILE MANAGEMENT /////////////////////
+////////////////////////////////////////////////////////////////
 
 // NOTE: Currently colors are not supported, so we send "true" to use auto-color
 DesignHandler.prototype.saveAllDesignsToFile = function(){

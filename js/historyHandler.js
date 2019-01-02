@@ -57,11 +57,11 @@ var HistoryHandler = function(){
 	var log = "";
 	
 	// When an action is done, it gets pushed to the addStack
-	var addStack = [];
+	this.addStack = [];
 	
 	// When an action is undon, it is Popped from addStack & pushed to subStack
 	// When an action is redon, it is Popped from the subStack & pushed to addStack
-	var subStack = [];
+	this.subStack = [];
 
 	return this;
 }; // HistoryHandler
@@ -72,7 +72,8 @@ HistoryHandler.prototype.doAction = function(action){
 	try{
 		action.onDo();
 	} catch (e) {
-		
+		console.log(e);
+		console.log("doACTION problem!!!", action);
 	}
 	this.log += action.toString();
 	this.addStack.push(action);
@@ -85,7 +86,8 @@ HistoryHandler.prototype.doUndo = function(){
 	try { 
 		action.onUndo();
 	} catch (e) {
-		
+		console.log(e);
+		console.log("undoACTION problem!!!", action);
 	}
 	this.log += "--- UNDO ---\n";
 	this.subStack.push(action);

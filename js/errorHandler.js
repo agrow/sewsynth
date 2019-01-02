@@ -45,7 +45,8 @@ ErrorHandler.prototype.traceMsg = function(msg, obj, e){
 };
 
 ErrorHandler.prototype.trace = function(e){
-	alert(e.stack);
+	console.log(e);
+	alert(e + "\n\n" + e.stack);
 };
 
 //////////////////////////////////////////////////
