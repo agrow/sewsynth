@@ -14,6 +14,10 @@ var Design = function() {
 	
 	this.currentAnchor = null;
 	
+	// activeness is set by "deleting" the item
+	this.active = true;
+	this.lastSelectedParams = null;
+	
 	return this;
 }; // Design
 
@@ -21,6 +25,37 @@ var Design = function() {
 ////////////////////////////////////////////////////////////////////////
 /////// ACCESSORS //////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
+
+Design.prototype.deactivate = function(){
+	if(this.active == true){
+		for(var i = 0; i < this.paths.length; i++){
+			this.paths[i].deactivate();
+			this.hideAndDeselectAllPaths();
+		}
+		
+		this.active = false;
+	} else {
+		console.log("Cannot deactivate an already deactive design");
+	}
+};
+
+// pre: hideAndDeselectAllPaths
+// post: loaded showAndSelectPath, which was set last time visibility settings were used
+Design.prototype.reactivate = function(){
+	if(this.active == false){
+		for(var i = 0; i < this.paths.length; i++){
+			this.paths[i].reactivate();
+		}
+		if(this.lastSelectedParams !== null){
+			this.showAndSelectPath(this.lastSelectedParams);
+		} else {
+			console.log("CANNOT REACTIVATE A PATH THAT HAS NO SAVED SETTINGS");
+		}
+		this.active = true;
+	} else {
+		console.log("Cannot activate an already active design");
+	}
+};
 
 ////////////////////////////////////////////////////////////////////////
 /////// GENERATE PATHS WITH DESIGNPATH.JS //////////////////////////////////////////////
@@ -137,6 +172,8 @@ Design.prototype.showAndSelectPath = function(selectedParams){
 	// Find which paths in which generatedPaths need to be shown
 	// based on the strings sent from index.html
 	console.log("selecting and showing paths", selectedParams);
+	this.lastSelectedParams = selectedParams;
+	
 	for(var i = 0; i < this.paths.length; i++){
 		console.log("processing paths on path id", i, this.paths[i]);
 		this.paths[i].selectAndShowPaths(selectedParams);

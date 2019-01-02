@@ -27,11 +27,37 @@ var DesignHandler = function(){
 	// calling other operations on design(s),
 
 DesignHandler.prototype.makeAndSetNewDesign = function(){
-	this.actionDesignCreate();
+	this.designs.push(new Design());
+	this.activeDesign = this.designs.length -1;
 }; // makeAndSetNewDesign
 
+DesignHandler.prototype.deleteLastDesign = function(){
+	// remove the path
+	// this path should be saved before deletion
+	var deletedDesign = this.designs.pop();
+	console.log("deleting design ", deletedDesign);
+	this.activeDesign = this.designs.length -1;
+}; // deleteLastDesign
 
-DesignHandler.prototype.addPaperJSPath = function(path){
+DesignHandler.prototype.reactivateDesign = function(design){
+	if(design == NaN){
+		this.designs.push(design);
+		this.activeDesign = this.designs.length -1;
+		this.activeDesign.reactivate();
+	} else {
+		if(this.designs[i] !== undefined && this.designs[i] !== null){
+			this.designs[i].reactivate();
+		}
+	}
+	
+};
+
+
+DesignHandler.prototype.addPaperJSPath = function(path, newDesign){
+	if(newDesign !== undefined && newDesign !== null && newDesign == true) {
+		this.makeAndSetNewDesign();
+	}
+	
 	if(this.designs[this.activeDesign] === null){
 		console.log("Cannot add path to null activeDesign...", this.designs[this.activeDesign], path);
 		global.mainErrorHandler.errorMsg("null activeDesign", this);
@@ -199,36 +225,66 @@ DesignHandler.prototype.regenerateAllDerivedPaths = function(inputParams){
 // them wholesale
 //
 // Includes:
-// Creating a design (path(s))
+// Creating a design (must come with a path)
 // Editing a design (path(s))
 // Deleting a design (paths(s))
 
+// PARAMS EXPECTED:
+// obj: a DesignHandler, the parent
+// path: the starting path
 DesignHandler.prototype.actionDesignCreate = function(params){
 	// REMEMER: "this" will be the action, not DesignHandler
 	// We send the params
+	//console.log(params);
+	//console.log(params.obj);
+	//console.log(params.path);
+	
 	var action = new Action(
 		// params
-		{obj: this},
+		params,
 		// do
 		function(){
+			
 			console.log("IN ACTIONDESIGNCREATE DO");
 			console.log(this);
 			console.log(this.params);
-			console.log(this.params.obj);
-			
+			//console.log(this.params.obj);
+			//console.log(this.params.path);
+			/*
 			this.params.obj.designs.push(new Design());
 			this.params.obj.activeDesign = this.params.obj.designs.length -1;
+			*/
+			try {
+				
+				this.params.obj.addPaperJSPath(this.params.path, true);
+			} catch (e) {
+				console.log(e);
+				console.log("design doACTION problem!!!", action);
+			}
 		},
 		// undo
 		function(){
-			console.log("IN ACTIONDESIGNCREATE UNDO");
-			console.log(this);
-			console.log(this.params);
-			console.log(this.params.obj);
 			
+			console.log("IN ACTIONDESIGNCREATE UNDO");
+			//console.log(this);
+			console.log(this.params);
+			/*
+			 
+			save this deleted design inside the action for redoing
 			var deletedDesign = this.params.obj.designs.pop();
-			console.log("deleting design ", deletedDesign);
-			this.params.obj.activeDesign = this.params.obj.designs.length -1;
+			
+			*/
+			this.params.deletedDesign = this.params.obj.designs[this.params.obj.designs.length-1];
+			this.params.deletedDesign.deactivate();
+			this.params.obj.deleteLastDesign();
+		},
+		//redo
+		function(){
+			console.log("IN ACTIONDESIGNCREATE REDO");
+			//console.log(this);
+			console.log(this.params);
+			
+			this.params.obj.reactivateDesign(this.params.deletedDesign);
 		}
 	);
 	
@@ -280,7 +336,7 @@ DesignHandler.prototype.saveAllDesignsToFile = function(){
 		if(i < this.designs.length-1) {
 			// JUMP from the last stitch of this design to the last stitch of the next
 			var firstStitch = this.designs[i+1].getFirstPoint();
-			this.fillInStitchGapsAndAddStitchAbs(stPattern, this.scale, firstStitch.x, firstStitch.y, stitchTypes.jump, true, this.threshold)//, stitchTypes.normal);
+			this.fillInStitchGapsAndAddStitchAbs(stPattern, this.scale, firstStitch.x, firstStitch.y, stitchTypes.jump, true, this.threshold);//, stitchTypes.normal);
 		}
 	}
 	

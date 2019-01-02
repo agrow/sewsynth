@@ -41,8 +41,12 @@ var CanvasHandler = function(canvasID){
 		//console.log("mouseup", path);
 		path.selected = false;
 		try{
-			global.mainDesignHandler.makeAndSetNewDesign();
-			global.mainDesignHandler.addPaperJSPath(path);
+			//global.mainDesignHandler.addPaperJSPath(path, true);
+			global.mainDesignHandler.actionDesignCreate({
+				"obj" : global.mainDesignHandler,
+				"path" : path
+				// design must be true for actionDesignCreate
+			});
 		} catch (e){
 			global.mainErrorHandler.error(e);
 		}

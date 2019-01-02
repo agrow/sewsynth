@@ -6,10 +6,15 @@
  * A major component of HistoryHandler
  * 
  */
-var Action = function(params, onDo, onUndo){
+var Action = function(params, onDo, onUndo, onRedo){
+	console.log("in action", params);
+	console.log("in action", params.obj);
+	console.log("in action", params.path);
 	this.params = params;
 	this.onDo = onDo;
 	this.onUndo = onUndo;
+	this.onRedo = onRedo;
+	// this.destroy
 	
 	return this;
 }; 
@@ -44,6 +49,7 @@ Action.prototype.fullPrint = function(log){
    
     console.log("onDo: ", this.onDo);
     console.log("onUndo: ", this.onUndo);
+    console.log("onRedo: ", this.onRedo);
 };
 
 /* HistoryHandler
@@ -81,6 +87,10 @@ HistoryHandler.prototype.doAction = function(action){
 	}
 	this.log += action.toString();
 	this.addStack.push(action);
+	
+	console.log("Did an action, clear out the redo stack!");
+	//TODO: utterly destroy any paths inside of the subStack
+	this.subStack = [];
 };
 
 ////////////////////////////////////////////////
@@ -93,13 +103,15 @@ HistoryHandler.prototype.doAction = function(action){
 HistoryHandler.prototype.doUndo = function(){
 	if(this.addStack.length > 0){
 		var action = this.addStack.pop();
+		this.log += "--- UNDO ---\n";
+		
 		try { 
 			action.onUndo();
 		} catch (e) {
 			console.log(e);
 			console.log("undoACTION problem!!!", action);
 		}
-		this.log += "--- UNDO ---\n";
+		
 		this.subStack.push(action);
 	} else {
 		console.log("Cannot undo empty stack, do nothing");
@@ -111,7 +123,17 @@ HistoryHandler.prototype.doRedo = function(){
 	if(this.subStack.length > 0){
 		var action = this.subStack.pop();
 		this.log += "--- REDO ---\n";
-		this.doAction(action);
+		
+		try{
+			action.onDo();
+		} catch (e) {
+			console.log(e);
+			console.log("redoACTION problem!!!", action);
+		}
+		
+		this.log += action.toString();
+		this.addStack.push(action);
+		
 	} else {
 		console.log("Cannot redo empty stack, do nothing");
 	}

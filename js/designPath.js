@@ -35,7 +35,7 @@ paper.Path.prototype.reportDisplay = function(){
 		strokeColor: this.strokeColor,
 		opacity: this.opacity,
 		visible: this.visible,
-		selected: this.selected,
+		selected: this.selected
 	};
 	return result;
 };
@@ -108,14 +108,14 @@ var DesignPath = function(parentDesign, pPath){
 	
 	// Save them drawing styles for the paper.js canvas
 	this.lastDisplaySettings = {
-		path:						{strokeColor:'black', opacity: 0.5},
-		"path.sewnPath": 			{strokeColor: 'black', opacity: 1},
-		simplifiedPath: 			{strokeColor: 'blue', opacity: 0.5},
-		"simplifiedPath.sewnPath": 	{strokeColor: 'blue', opacity: 1},
-		flattenedPath: 				{strokeColor: 'green', opacity: 0.5},
-		"flattenedPath.sewnPath":	{strokeColor: 'green', opacity: 1},
-		generatedPath: 				{strokeColor: 'red', opacity: 0.5},
-		"generatedPath.sewnPath":		{strokeColor: 'red', opacity: 1}
+		path:						{strokeColor:'black', opacity: 0.5},//, visible: true, selected: true},
+		"path.sewnPath": 			{strokeColor: 'black', opacity: 1},//, visible: true, selected: true},
+		simplifiedPath: 			{strokeColor: 'blue', opacity: 0.5},//, visible: true, selected: true},
+		"simplifiedPath.sewnPath": 	{strokeColor: 'blue', opacity: 1},//, visible: true, selected: true},
+		flattenedPath: 				{strokeColor: 'green', opacity: 0.5},//, visible: true, selected: true},
+		"flattenedPath.sewnPath":	{strokeColor: 'green', opacity: 1},//, visible: true, selected: true},
+		generatedPath: 				{strokeColor: 'red', opacity: 0.5},//, visible: true, selected: true},
+		"generatedPath.sewnPath":	{strokeColor: 'red', opacity: 1}//, visible: true, selected: true}
 	};
 	
 	this.allParsedParamOptions = [	"path", "path.sewnPath", 
@@ -130,6 +130,8 @@ var DesignPath = function(parentDesign, pPath){
 	
 	// Tolerance, Flatness, other properties used in the creation of new lines
 	this.lastUsedLineParams = {};
+	
+	this.active = true;
 	
 	this.stitchLengthMM = 2;
 	this.pixelsPerMM = 10;
@@ -405,6 +407,26 @@ DesignPath.prototype.setAllPathsDeselected = function(){
     }
 };
 
+// TODO: save what the old visible/selected settings were
+
+DesignPath.prototype.deactivate = function(){
+	// TODO: save last settings
+	// THIS IS TAKING A LONG TIME AND HURTING MY HEAD
+	// And do we even need it? Eh, not now!
+	
+	// set all to visible = false and selected = false
+	this.active = false;
+	//this.setAllPathsDeselected();
+	//this.setAllPathsHidden();
+};
+
+// TODO: make a load function that uses those settings 
+DesignPath.prototype.reactivate = function(){
+	// load last settings
+	this.active = true;
+	
+};
+
 /* HOW TO ACCESS/SELECT A PATH VIA "params"
  * params={
  * 	path: {sewn: false/true}
@@ -497,6 +519,8 @@ DesignPath.prototype.selectAndShowPaths = function(params){
 	
 	//console.log("flattenedPath VISIBLE?!", this.derivitivePaths.flattenedPath);
 	// If we have shown ANYTHING, we should make sure it has the most up-to-date drawing properties
+	// -> moving this earlier to save the visibility settings BEFORE applying them
+    // so we don't just save them all being invisible...
 	this.applyPathDrawingProperties();
 	
 	//console.log("flattenedPath DRAWN WELL?", this.derivitivePaths.flattenedPath);
@@ -536,6 +560,7 @@ DesignPath.prototype.setPathDrawingProperties = function(params){
     }
     // If we have changed the drawing properties in our settings,
     // Make sure to apply them to all the actual lines
+
     this.applyPathDrawingProperties();
     return;
 	
