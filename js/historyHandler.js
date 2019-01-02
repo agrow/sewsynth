@@ -66,6 +66,10 @@ var HistoryHandler = function(){
 	return this;
 }; // HistoryHandler
 
+////////////////////////////////////////////////
+// CALLED BY OTHER FUNCTIONS IN THE CODE
+// Where actions are defined & executed 
+////////////////////////////////////////////////
 
 // Makes a new Action & pushes it to addStack
 HistoryHandler.prototype.doAction = function(action){
@@ -79,24 +83,37 @@ HistoryHandler.prototype.doAction = function(action){
 	this.addStack.push(action);
 };
 
+////////////////////////////////////////////////
+// CALLED BY MAIN ON INPUT LISTENING
+// Needs no contextual input
+////////////////////////////////////////////////
+
 
 // Pops an action from addStack & pushes it to subStack
 HistoryHandler.prototype.doUndo = function(){
-	var action = this.addStack.pop();
-	try { 
-		action.onUndo();
-	} catch (e) {
-		console.log(e);
-		console.log("undoACTION problem!!!", action);
+	if(this.addStack.length > 0){
+		var action = this.addStack.pop();
+		try { 
+			action.onUndo();
+		} catch (e) {
+			console.log(e);
+			console.log("undoACTION problem!!!", action);
+		}
+		this.log += "--- UNDO ---\n";
+		this.subStack.push(action);
+	} else {
+		console.log("Cannot undo empty stack, do nothing");
 	}
-	this.log += "--- UNDO ---\n";
-	this.subStack.push(action);
 };
 
 // Pops an action from subStack & pushes it to addStack
 HistoryHandler.prototype.doRedo = function(){
-	var action = this.subStack.pop();
-	this.log += "--- REDO ---\n";
-	this.doAction(action);
+	if(this.subStack.length > 0){
+		var action = this.subStack.pop();
+		this.log += "--- REDO ---\n";
+		this.doAction(action);
+	} else {
+		console.log("Cannot redo empty stack, do nothing");
+	}
 };
 

@@ -12,6 +12,9 @@ var global = {
 	design_options: {visible: false},
 	view_options: {visible: false},
 	image_options: {visible: false},
+	
+	keyMap: {},
+	keyEventFired: {}
 };
 
 if (!window.FileReader) {
@@ -56,6 +59,79 @@ var initHistoryHandler = function(){
 ///////////////////////////////////////////////////////
 /////////////// EVENT-BASED FUNCTIONS ////////////////
 ///////////////////////////////////////////////////////
+
+// USED KEYS:
+// 17, 90, 16, 88 (UNDO/REDO)
+var initKeys = function() {
+	global.keyMap[17] = false;
+	global.keyMap[90] = false;
+	global.keyMap[16] = false;
+	global.keyMap[88] = false;
+	
+	global.keyEventFired.undo = false;
+	global.keyEventFired.redo = false;
+};
+
+var updateKeyEvent = function(e){
+    e = e || event; // to deal with IE
+    global.keyMap[e.keyCode] = e.type == 'keydown';
+    /* now ready to check conditionals */
+};
+
+window.onkeyup = function(e) {
+	updateKeyEvent(e);
+	//console.log(global.keyMap);
+	// UNDO
+	// code 17 = ctrl
+	// code 90 = z
+	if(global.keyMap[17] == false || global.keyMap[90] == false){
+		global.keyEventFired.undo = false;
+		//console.log("Setting undo fire to false");
+	}
+	// REDO
+	// code 17 = ctrl
+	// code 16 = shift
+	// code 88 = x
+	if(global.keyMap[17] == false || global.keyMap[16] == false ||
+		global.keyMap[88] == false){
+		global.keyEventFired.redo = false;
+		//console.log("Setting redo fire to false");
+	}
+};
+
+window.onkeydown = function(e) {
+	var oldKeyMap = global.keyMap;
+	updateKeyEvent(e);
+		
+	//console.log("OLD", oldKeyMap);
+	//console.log("NEW", global.keyMap);
+	
+	if(global.mainHistoryHandler !== null){
+		// the error handler is ready to hear its input
+		// UNDO
+		// code 17 = ctrl
+		// code 90 = z
+		if(global.keyMap[17] == true && global.keyMap[90] == true &&
+			global.keyEventFired.undo == false){
+				// trigger undo
+				global.mainHistoryHandler.doUndo();
+				console.log("UNDOOOOOO");
+				global.keyEventFired.undo = true;
+			}
+			
+		// REDO
+		// code 17 = ctrl
+		// code 16 = shift
+		// code 88 = x
+		if(global.keyMap[17] == true && global.keyMap[16] == true &&
+			global.keyMap[88] == true && global.keyEventFired.redo == false){
+				// trigger undo
+				global.mainHistoryHandler.doRedo();
+				console.log("REdooo");
+				global.keyEventFired.redo = true;
+		}
+	}
+};
 
 // Handled by flex, but we may need to override that if it doesn't work with our drawing functions...
 
@@ -118,6 +194,9 @@ $( document ).ready(function() {
 		
 		// Move the menus over... need to also update this on resize...
 		updateMenuPositions();
+		
+		initKeys();
+		
 		console.log( "ready!" );
 	} catch (e){
 		alert("catastrophic failure -- initialization failed");

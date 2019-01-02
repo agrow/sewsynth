@@ -102,7 +102,6 @@ DesignHandler.prototype.updatePathSelection = function(selected){
 	parsedSelection = this.parsePathSelection(selected);
 	console.log("updatePathSeletion ", parsedSelection);
 	console.log("this.designs", this.designs);
-	console.log("this.designs[this.activeDesign]", this.designs[this.activeDesign]);
 	
 	for(var i = 0; i < this.designs.length; i++){
 		// Deselect all
@@ -112,12 +111,12 @@ DesignHandler.prototype.updatePathSelection = function(selected){
 	
 	// do it for the active design as well
 	// Deselect...
-	if(this.designs[this.activeDesign] !== null){
+	if(this.designs[this.activeDesign] !== null && this.designs[this.activeDesign] !== undefined){
 		
 		this.designs[this.activeDesign].hideAndDeselectAllPaths();
 		this.designs[this.activeDesign].showAndSelectPath(parsedSelection);
 	} else {
-		console.log("Cannot update selection for a null activeDesign...");
+		console.log("Cannot update selection for a null/undefined activeDesign...");
 	}
 };
 
