@@ -4,10 +4,13 @@ var global = {
 	mainCanvasHandler: null,
 	mainDesignHandler: null,
 	mainDesignGenerator: null,
+	
 	calcHeight: 0,
 	calcWidth: 0,
 	designCount: 0,
 	pointCount: 0,
+	
+	
 	// GUIelements, not necessary to put them here, but helpful to know what's up
 	design_options: {visible: false},
 	view_options: {visible: false},
@@ -54,6 +57,10 @@ var initErrorHandler = function(){
 
 var initHistoryHandler = function(){
 	global.mainHistoryHandler = new HistoryHandler();
+};
+
+var initNoise = function(seed){
+	noise.seed(seed);
 };
 
 ///////////////////////////////////////////////////////
@@ -188,6 +195,7 @@ $( document ).ready(function() {
 		initCanvas(); // also initializes canvasHandler
 		initDesignGenerator();
 		initDesignHandler();
+		initNoise(Math.random());
 		
 		initilizeMenus(); // in guiHandler.js 
 		// ^ !! NOTE !! Must be called after DesignHandler as it uses a function in the global.mainDesignHandler

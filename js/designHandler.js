@@ -73,7 +73,7 @@ DesignHandler.prototype.addPaperJSPath = function(path, newDesign){
 											tolerance: getValueOfSlider("lineSimplifierTolerance"),
 											flatness: getValueOfSlider("lineFlatness"),
 										    stitchLength: getValueOfSlider("edgeThreshold"),
-										    generateSeedPath: "flattenedPath"
+										    generateSeedPath: "path"
 										    // Add any generation settings here
 										    });
 		console.log("default path size ", path.segments.length);
@@ -187,7 +187,7 @@ DesignHandler.prototype.regenerateAllDerivedPaths = function(inputParams){
 			tolerance: getValueOfSlider("lineSimplifierTolerance"),
 			flatness: getValueOfSlider("lineFlatness"),
 			stitchLength: getValueOfSlider("edgeThreshold"),
-			generateSeedPath: "flattenedPath"
+			generateSeedPath: "path"
 		};
 	} else {
 		// NOTE: This should only be called when generateAllDerivedPaths is called on the activeDesign

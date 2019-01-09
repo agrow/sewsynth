@@ -125,7 +125,8 @@ var DesignPath = function(parentDesign, pPath){
 									
 	// should always be a completely valid set of settings declared here or in parseGenerationParameters
 	this.lastGenerationSettings = {
-		generateSeedPath: "flattenedPath"
+		generateSeedPath: "path",
+		type: "sketchNoise"
 	};
 	
 	// Tolerance, Flatness, other properties used in the creation of new lines
@@ -359,7 +360,7 @@ DesignPath.prototype.setLastUsedLineParams = function(params){
 // Post: Non-null paths are set as hidden
 DesignPath.prototype.setAllPathsHidden = function(){
 	if(this.paperPath !== null){
-		console.log("setting path invisible paperPath");
+		//console.log("setting path invisible paperPath");
 		this.paperPath.visible = false;
 		if(this.paperPath.sewnPath !== undefined && this.paperPath.sewnPath !== null){
 			this.paperPath.sewnPath.visible = false;
@@ -370,7 +371,7 @@ DesignPath.prototype.setAllPathsHidden = function(){
 	    if (!this.derivitivePaths.hasOwnProperty(key)) continue;
 	
 	    if (this.derivitivePaths[key] !== null){
-	    	console.log("setting derivitive path invisible", key);
+	    	//console.log("setting derivitive path invisible", key);
 	    	this.derivitivePaths[key].visible = false;
 	    	if(this.derivitivePaths[key].sewnPath !== undefined && this.derivitivePaths[key].sewnPath !== null){
 	    		this.derivitivePaths[key].sewnPath.visible = false;
@@ -386,7 +387,7 @@ DesignPath.prototype.setAllPathsHidden = function(){
 // Post: Non-null paths are set as not selected
 DesignPath.prototype.setAllPathsDeselected = function(){
 	if(this.paperPath !== null){
-		console.log("setting path deselected paperPath");
+		//console.log("setting path deselected paperPath");
 		this.paperPath.selected = false;
 		if(this.paperPath.sewnPath !== undefined && this.paperPath.sewnPath !== null){
 			this.paperPath.sewnPath.selected = false;
@@ -398,7 +399,7 @@ DesignPath.prototype.setAllPathsDeselected = function(){
 	    if (!this.derivitivePaths.hasOwnProperty(key)) continue;
 	
 	    if (this.derivitivePaths[key] !== null){
-	    	console.log("setting derivitive path deselected", key);
+	    	//console.log("setting derivitive path deselected", key);
 	    	this.derivitivePaths[key].selected = false;
 	    	if(this.derivitivePaths[key].sewnPath !== undefined && this.derivitivePaths[key].sewnPath !== null){
 	    		this.derivitivePaths[key].sewnPath.selected = false;
@@ -876,11 +877,13 @@ DesignPath.prototype.parseGenerationParameters = function(params){
 	if(params === undefined || params == null){
 		console.log("parsingGenerationParameters has no parameters to parse. Use last saved version", this.lastGenerationSettings);
 		params = this.lastGenerationSettings;
-	} else if (params.generateSeedPath === undefined || params.generateSeedPath === null) {
+	} 
+	/////////// PATH ////////////
+	if (params.generateSeedPath === undefined || params.generateSeedPath === null) {
 
 		console.log("called parseGenerationParameters with invalid parameters: must include a generateSeedPath", params);
 		console.log("parseGenerationParameters using last saved version", this.lastGenerationSettings);
-		params = this.lastGenerationSettings;
+		params.generateSeedPath = this.lastGenerationSettings.generateSeedPath;
 	} 
 	
 	console.log("parseGenerationParameters parsing ", params.generateSeedPath);
@@ -921,7 +924,21 @@ DesignPath.prototype.parseGenerationParameters = function(params){
 		return null;
 	}
 	
-	console.log("Successfully parsed a new path! Hurrah!");
+	/////////// GENERATION TYPE ///////////
+	if (params.type === undefined || params.type === null) {
+
+		console.log("called parseGenerationParameters with invalid parameters: should include a type", params);
+		console.log("parseGenerationParameters using last saved type", this.lastGenerationSettings);
+		params.type = this.lastGenerationSettings.type;
+	} 
+	newParams.type = params.type;
+	///////////////////////////////////////
+	
+	/////TODO: GENERATION VARIABLES ///////
+	
+	///////////////////////////////////////
+	
+	console.log("Successfully parsed a new path params! Hurrah!", newParams);
 	return newParams;
 
 };
@@ -953,9 +970,9 @@ DesignPath.prototype.generatePath = function(params){
 	var parsedParams = this.parseGenerationParameters(params);
 	
 	// GENERATE IT
-	this.derivitivePaths.generatedPath = new Path(global.mainDesignGenerator.generate(parsedParams));
+	this.derivitivePaths.generatedPath = global.mainDesignGenerator.generate(parsedParams);
 	
-	console.log(this.derivitivePaths.generatedPath);
+	console.log("Generated path", this.derivitivePaths.generatedPath);
 	// When we have the params nailed, make sure to check/save them
 	/*
 	if(params === undefined || params.flatness === undefined){

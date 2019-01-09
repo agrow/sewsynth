@@ -20,7 +20,8 @@ var CanvasHandler = function(canvasID){
 	
 	//TESTING
 	this.drawingTool = new Tool();
-	this.drawingTool.minDistance = 3;
+	this.drawingTool.minDistance = 4;
+	this.drawingTool.maxDistance = 10;
 	//this.activePath = null;
 	var path = null;
 	

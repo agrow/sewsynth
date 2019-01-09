@@ -1,6 +1,16 @@
 var DesignGenerator = function(){
 	this.verbose = false;
 	
+	this.defaultNoiseSettings = {
+		num_iterations: 5, 
+		persistence: .7,
+		freq: .007, 
+		// normal noise is 0-1, remember this is pixels
+		// 10 gives us at least a solid number. with a distance away from the original point 
+		low: -30, 
+		high: 30
+	};
+	
 	return this;
 }; // DesignGenerator
 
@@ -9,9 +19,9 @@ var DesignGenerator = function(){
 ////////////////////////////////////////////////////////////////////////
 
 // Input: params:{
-//		path:  	 
-//		relative/absolute:  	 
-//		path:  	 
+//		path:   	 
+//		type: (relative/absolute/sketchNoise) 	 
+//		noiseSettings: (num_iterations, persistence, freq, low, high) // there are defaults for all of these  	 
 //		path:  	 
 //		path:  	 
 //		path:  	 
@@ -26,15 +36,23 @@ DesignGenerator.prototype.generate = function(params){
 		return null;
 	}
 	
-	if(params.path === undefined || params.path === null){
-		console.log("CANNOT generate anything without some grounding using a 'path'");
+	if(params.path === undefined || params.path === null || params.type === undefined || params.type === null){
+		console.log("CANNOT generate anything without some grounding using a 'path' and a type", params);
 		return null;
 	}
 	
-	var relativeNewPoints = this.scaleYPointPosition( [new Point(.33, 1), new Point(.66, -1)], 50);
-	var points = this.getPathPointsOfPaperJSPath(params.path);
-	
-	return this.generatePathRelativeToDesignLines(points, relativeNewPoints);
+	if(params.type == "relative"){
+		var relativeNewPoints = this.scaleYPointPosition( [new Point(.33, 1), new Point(.66, -1)], 50);
+		var points = this.getPathPointsOfPaperJSPath(params.path);
+		
+		return new Path(this.generatePathRelativeToDesignLines(points, relativeNewPoints));
+	} else if (params.type == "sketchNoise"){
+		// TODO: num_iterations, persistence, freq, low, high
+		return this.applyNoiseToPath(params.path, params.noiseSettings);
+	} else {
+		console.log("generate sent invalid path type", params.type);
+		return null;
+	}
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -75,17 +93,105 @@ DesignGenerator.prototype.scaleYPointPosition = function(pts, scale){
 /////// GENERATION //////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
 
-// Density: how closely stitches are made, resulting in something akin to satin or scribbles. 0-1
-// maxWidth: how wide from the origional design line we are allowed to go. pixels?
-// rateOfChange: How quickly the design runs through the func's changes
-// func: function of change, in this case noise, so func would likely be a random seed fed into perlinNoise
-DesignGenerator.prototype.add1DNoise = function(density, maxWidth, rateOfChange, func){
+////////////////////////////////////////////////////////////////////////
+/////// NOISE //////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+/*
+ * this.defaultNoiseSettings = {
+		num_iterations: 5, 
+		persistence: .7,
+		freq: .007, 
+		low: -1, 
+		high: 1,
+	}
+ */
+
+DesignGenerator.prototype.applyNoiseToPath = function(path, params){
+	var iterations = this.defaultNoiseSettings.num_iterations;
+	var persistence = this.defaultNoiseSettings.persistence;
+	var freq = this.defaultNoiseSettings.freq;
+	var low = this.defaultNoiseSettings.low;
+	var high = this.defaultNoiseSettings.high;
+	
+	if(params !== undefined && params !== null){
+		console.log("NoiseToPath using some new settings", params);
+		
+		if(params.num_iterations !== undefined && params.num_iterations !== null){
+			iterations = params.num_iterations;
+		}
+		if(params.persistence !== undefined && params.persistence !== null){
+			persistence = params.persistence;
+		}
+		if(params.freq !== undefined && params.freq !== null){
+			freq = params.freq;
+		}
+		if(params.low !== undefined && params.low !== null){
+			low = params.low;
+		}
+		if(params.high !== undefined && params.high !== null){
+			high = params.high;
+		}
+	} else {
+		console.log("NoiseToPath using default noise settings", this.defaultNoiseSettings);
+	}
+	
+	var newPath = path.clone();
+	for(var i = 0; i < newPath.segments.length; i++){
+		var xvalue = this.sumOcatave(iterations, newPath.segments[i].point.x, newPath.segments[i].point.y, persistence, freq, low, high);
+		var yvalue = this.sumOcatave(iterations, xvalue, newPath.segments[i].point.y, persistence, freq, low, high);
+		
+		console.log("noise values for i ", i, xvalue, yvalue);
+		newPath.segments[i].point.x += xvalue;
+		
+		newPath.segments[i].point.y += yvalue;
+	}
+	return newPath;
 	
 };
 
-DesignGenerator.prototype.add2DNoise = function(density, maxWidth, rateOfChange, variation, func1, func2){
+// num_iterations is how many ocataves of noise we average
+// x and y are the locations
+// persistence is the scale factor for each iteration, 
+//		<0 makes amp decrease over time, >0 makes amp increase over time
+// freq is the frequency
+// low/high are the range of values we are getting in return
+// https://cmaher.github.io/posts/working-with-simplex-noise/
+DesignGenerator.prototype.sumOcatave = function(num_iterations, x, y, persistence, freq, low, high){
+	var maxAmp = 0;
+	var amp = 1;
+	var noiseVal = 0;
+	
+	// add successively smaller, higher-frequency terms
+	for(var i = 0; i < num_iterations; i++){
+		noiseVal += noise.simplex2(x * freq, y * freq) * amp;
+		maxAmp += amp;
+		amp *= persistence;
+		freq *= 2;
+	}
+	
+	// take the average value of the iterations
+	noiseVal /= maxAmp;
+	
+	// normalize the result
+	noiseVal = noiseVal * (high - low)/2 + (high + low)/2;
+	
+	return noiseVal;
 	
 };
+
+////////////////////////////////////////////////////////////////////////
+
+
+DesignGenerator.prototype.testAbsNoiseDesign = function(pointsDensity){
+	
+};
+
+
+
+//////////////////////////////////////////////////////////////////////////////
+//////////////// RELATIVE... /////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
 DesignGenerator.prototype.testRelativeDesign = function(){
 	//this.generatePathPoints(this.flattenedPath); // Resets this.pathPoints to the recentPath.
@@ -107,16 +213,6 @@ DesignGenerator.prototype.testAbsSinDesign = function(inputPath, sinSample, poin
 	this.generatePathAbsoluteToDesignLines(this.scaleYPointPosition(points, 10));
 };
 */
-DesignGenerator.prototype.testAbsNoiseDesign = function(pointsDensity){
-	
-};
-
-
-
-//////////////////////////////////////////////////////////////////////////////
-//////////////// RELATIVE... /////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-
 
 // INPUT: path points, not a Path
 // OUTPUT: path points, not a Path
