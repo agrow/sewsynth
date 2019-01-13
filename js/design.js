@@ -12,6 +12,9 @@ var Design = function() {
 	// list of DesignPaths   
 	this.paths = [];
 	
+	// types are the different styles the user selects
+	this.type = null;
+	
 	this.currentAnchor = null;
 	
 	// activeness is set by "deleting" the item

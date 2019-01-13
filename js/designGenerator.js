@@ -48,7 +48,9 @@ DesignGenerator.prototype.generate = function(params){
 		return new Path(this.generatePathRelativeToDesignLines(points, relativeNewPoints));
 	} else if (params.type == "sketchNoise"){
 		// TODO: num_iterations, persistence, freq, low, high
+		// TODO: integrate angles into any paths off the standard line
 		return this.applyNoiseToPath(params.path, params.noiseSettings);
+		
 	} else {
 		console.log("generate sent invalid path type", params.type);
 		return null;
@@ -86,6 +88,17 @@ DesignGenerator.prototype.scaleYPointPosition = function(pts, scale){
 		newPoints.push(pt);
 	}
 	return newPoints;
+};
+
+// TODO: integrate angles into any paths off the main path
+DesignGenerator.prototype.applyAngle = function(originPath, generatedPath, radius, angle){
+	// for each point on generatedPath,
+		// Find closest point on originPath
+		// Make conceptual circle with originPoint as the origin and generatedPoint at edge
+		// Find angle of line between originPoint & generated point as differentiated by 
+			// a standard 0 is to the direct right
+		// Make newPoint at new radius between originPoint and generatedPoint
+		// move newPoint by angle along the circle of input radius with center at originPath
 };
 
 
