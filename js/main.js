@@ -4,6 +4,7 @@ var global = {
 	mainCanvasHandler: null,
 	mainDesignHandler: null,
 	mainDesignGenerator: null,
+	toolLibrary: toolLibrary, // this is defined in tools.js
 	
 	calcHeight: 0,
 	calcWidth: 0,

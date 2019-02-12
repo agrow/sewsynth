@@ -18,6 +18,8 @@ var CanvasHandler = function(canvasID){
 	this.canvas = document.getElementById(canvasID);
 	paper.setup(this.canvas);
 	
+	/*
+	
 	//TESTING
 	this.drawingTool = new Tool();
 	this.drawingTool.minDistance = 4;
@@ -54,6 +56,10 @@ var CanvasHandler = function(canvasID){
 		
 		//console.log("deselected", path);
 	};
+	*/
+	
+	this.customTool = global.toolLibrary.plainLine;
+	this.customTool.activate();
 	
 	/*
 	var path = new Path();
