@@ -84,6 +84,23 @@ var updateMenuPositions = function(){
 	moveMenu("image_options", $("#design_options").outerWidth() + 5, 0);
 };
 
+var updateButtonStates = function(){
+	for (var key in global.toolLibrary) {
+	    // skip loop if the property is from prototype
+	    if (!global.toolLibrary.hasOwnProperty(key)) continue;
+	
+	    var toolObj = global.toolLibrary[key];
+	    
+	    if(global.selectedTool == toolObj.name){
+	    	//console.log("setting tool button to active: ", toolObj.name);
+	    	$("#tool_button_" + toolObj.name).addClass('active');
+	    } else {
+	    	//console.log("setting tool button to DEACTIVE: ", toolObj.name);
+	    	$("#tool_button_" + toolObj.name).removeClass('active');
+	    }
+	}
+};
+
 var initializeToolboxButtons = function(){
 	// global.toolLibrary has the list of all the things we want to have buttons for
 	// For now, just add them all!
@@ -106,7 +123,8 @@ var initializeToolboxButtons = function(){
 		butt.button({
 			//label:toolObj.name
 			icons:{primary:null},
-			text: false}).addClass("imageButtonClass")
+			text: false}).removeClass()
+						.addClass("imageButtonClass")
 						.addClass("tooldefault") // TODO: CHange to tool + toolObj.name when we have those
 						
 						.click(function(e) {
@@ -115,6 +133,13 @@ var initializeToolboxButtons = function(){
 											var toolName = e.target.id.slice(12);
 											//console.log("grabbed tool name", toolName);
 											//console.log("grabbed tool obj using name", global.toolLibrary[toolName]);
+											var oldTool = global.selectedTool;
+											
+											global.toolLibrary[oldTool].deactivate();
+											// activate sets the global.selectedTool to the new name
+											global.toolLibrary[toolName].activate();
+											
+											updateButtonStates();
 										;});
 		
 	    count ++;

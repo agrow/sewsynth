@@ -5,6 +5,7 @@ var global = {
 	mainDesignHandler: null,
 	mainDesignGenerator: null,
 	toolLibrary: toolLibrary, // this is defined in tools.js
+	selectedTool: "plainLine",
 	
 	calcHeight: 0,
 	calcWidth: 0,

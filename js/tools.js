@@ -71,16 +71,20 @@ CustomTool.prototype.setupEditingTool =  function(){
 	// on mouse events should be based on picking existing paths
 };
 
+////////////////////////////////////////////////////////
+// The GUI handler deactivates the current tool and activates the right one
+// based on the buttons that the user presses
 CustomTool.prototype.activate = function(){
 	this.paperTool.activate(); // add to paper js scope
-	console.log("activating tool " + this.paperTool.name, this.paperTool)
+	global.selectedTool = this.paperTool.name;
+	console.log("activating tool " + this.paperTool.name, this.paperTool);
 };
 
 // This SHOULD turn off the tool, I hope
 // If not, we have to turn off/remove the events that setup__Tool adds
 CustomTool.prototype.deactivate = function(){
 	this.paperTool.remove(); // take sit off the paper js scope
-	console.log("removing/deactivating tool " + this.paperTool.name, this.paperTool)
+	console.log("removing/deactivating tool " + this.paperTool.name, this.paperTool);
 };
 
 ////////////////////////////////////////////////////
@@ -92,31 +96,31 @@ var toolLibrary = {
 	//////// DRAWING //////////
 	//////////////////////////////
 	plainLine: new CustomTool(
-		"plainLine","drawing",
+		"plainLine","drawing"
 		// canvas handler tool just needs a min
 		// Design settings needs 1 path
 		// No generation settings
 	),
 	sketchNoise: new CustomTool(
-		"sketchNoise", "drawing",
+		"sketchNoise", "drawing"
 		// canvas handler tool needs min & small max lines
 		// Design settings needs 1 path
 		// Generation settings need loooow frequency, low iterations, low
 	),
 	sketchNoiseDouble: new CustomTool(
-		"sketchNoiseDouble", "drawing",
+		"sketchNoiseDouble", "drawing"
 		// canvas handler tool needs min & small max lines
 		// Design settings needs 2 paths
 		// Generation settings need loooow frequency, low iterations, low
 	),
 	sketchHighNoise: new CustomTool(
-		"sketchHighNoise", "drawing",
+		"sketchHighNoise", "drawing"
 		// canvas handler tool needs min and small max lines
 		// Design settings needs 1 paths
 		// Generation settings need high frequency and an angle
 	),
 	swingNoise: new CustomTool(
-		"swingNoise", "drawing",
+		"swingNoise", "drawing"
 		// canvas handler tool needs min & small max lines
 		// Design settings needs 1 path
 		// Generation settings needs 2 sets of generation settings
@@ -125,20 +129,20 @@ var toolLibrary = {
 	),
 	////////////////////
 	speedyDrawing: new CustomTool(
-		"speedyDrawing", "drawing",
+		"speedyDrawing", "drawing"
 		// canvas handler tool needs min & max
 		// Design settings needs 2 paths
 		// Generation settings need density (if none, draw outlines)
 	),
 	///////////////////
 	echoExact: new CustomTool(
-		"echoExact", "drawing",
+		"echoExact", "drawing"
 		// canvas handler tool min
 		// Design settings needs 1 path
 		// no generation settings
 	),
 	echoTangent: new CustomTool(
-		"echoTangent", "drawing",
+		"echoTangent", "drawing"
 		// canvas handler tool needs min
 		// Design settings needs 1 path
 		// no generation settings
@@ -153,7 +157,7 @@ var toolLibrary = {
 	//////////////
 	/////////////////////
 	plainSatin: new CustomTool(
-		"plainSatin", "editing",
+		"plainSatin", "editing"
 		// canvas handler tool is a picker
 		// Design settings needs 2 paths
 		// Generation settings need density

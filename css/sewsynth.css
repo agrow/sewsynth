@@ -111,6 +111,32 @@ div {
     height: 40px;
     background-size: 40px 40px;
     border: none;    
+    
+    /* From jqueryCSS */
+    padding: .4em 1em;
+	display: inline-block;
+	position: relative;
+	line-height: normal;
+	margin-right: .1em;
+	cursor: pointer;
+	vertical-align: middle;
+	text-align: center;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+
+	/* Support: IE <= 11 */
+	overflow: visible;
+    
+}
+
+.imageButtonClass:hover,
+.imageButtonClass:focus,
+.active {
+	border: 1px solid #cccccc;
+	font-weight: normal;
+	color: #2b2b2b;
 }
 
 .tooldefault, .tooldefault:active, .tooldefault:focus, .tooldefault:hover
