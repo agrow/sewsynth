@@ -3,6 +3,8 @@
 var CustomTool = function(name, type){
 	
 	this.paperTool = new paper.Tool();
+	this.name = name;
+	this.type = type;
 	
 	
 	//this.path = null;

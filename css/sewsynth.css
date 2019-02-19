@@ -103,3 +103,26 @@ div {
 .menu_item {
 	visibility: hidden;
 }
+
+.imageButtonClass
+{
+    background-repeat: no-repeat; 
+    width: 40px;
+    height: 40px;
+    background-size: 40px 40px;
+    border: none;    
+}
+
+.tooldefault, .tooldefault:active, .tooldefault:focus, .tooldefault:hover
+{
+	background-image: url(../media/toolIcon.png);   
+}
+.toolplainLine, #tool_button_plainLine
+{
+	background-image: url(../media/toolIcon.png);   
+}
+
+.toolsketchNoise, #tool_button_sketchNoise
+{
+	background-image: url(../media/toolIcon.png);   
+}

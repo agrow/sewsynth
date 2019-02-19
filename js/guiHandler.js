@@ -80,7 +80,47 @@ var moveMenu = function(ID, toX, toY){
 var updateMenuPositions = function(){
 	moveMenu("view_options", $("#hundred").width()-$("#view_options").outerWidth(true), 0);
 	moveMenu("print", 0, $("#hundred").height()-$("#print").outerHeight(true));
+	moveMenu("toolbox", 0, 50);
 	moveMenu("image_options", $("#design_options").outerWidth() + 5, 0);
+};
+
+var initializeToolboxButtons = function(){
+	// global.toolLibrary has the list of all the things we want to have buttons for
+	// For now, just add them all!
+	var count = 0;
+	for (var key in global.toolLibrary) {
+	    // skip loop if the property is from prototype
+	    if (!global.toolLibrary.hasOwnProperty(key)) continue;
+	
+	    var toolObj = global.toolLibrary[key];
+	    console.log("initializing tool button ", toolObj.name);
+	    
+	    if(count > 0){
+	    	var br = $('<br/>').appendTo("#toolbox");
+	    }
+	    // , 'class': "ui-button"
+	    var butt = $('<div/>', {id: "tool_button_" + toolObj.name, 'class': "ui-button ui-widget ui-corner-all ui-button-icon-only"}).appendTo("#toolbox");
+		
+		//020 8269 3401
+		// TODO: FIX THIS FUCKING BUTTON TO SHOW THE IMAGE ON MOUSE DOWN/CLICK
+		butt.button({
+			//label:toolObj.name
+			icons:{primary:null},
+			text: false}).addClass("imageButtonClass")
+						.addClass("tooldefault") // TODO: CHange to tool + toolObj.name when we have those
+						
+						.click(function(e) {
+											//console.log("Do something with tool",e);
+											// slice out "tool_button_"
+											var toolName = e.target.id.slice(12);
+											//console.log("grabbed tool name", toolName);
+											//console.log("grabbed tool obj using name", global.toolLibrary[toolName]);
+										;});
+		
+	    count ++;
+	}
+	
+	
 };
 
 ////////////////////////////////////////////////
@@ -130,6 +170,8 @@ var initilizeMenus = function(){
 	// This one is not invisible, so we just add it manually and let it float...
 	var saveButton = $('<div/>', {id: "save_button", 'class': "ui-button"}).appendTo("#print");
 	saveButton.button({label:"Save to DST"}).click(function() {global.mainDesignHandler.saveAllDesignsToFile();});
+	
+	initializeToolboxButtons();
 	
 	console.log("Menus initialized");
 };
