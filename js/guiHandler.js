@@ -134,6 +134,8 @@ var initializeToolboxButtons = function(){
 											//console.log("grabbed tool name", toolName);
 											//console.log("grabbed tool obj using name", global.toolLibrary[toolName]);
 											var oldTool = global.selectedTool;
+											//console.log("grabbed OLD tool name", global, oldTool);
+											
 											
 											global.toolLibrary[oldTool].deactivate();
 											// activate sets the global.selectedTool to the new name
@@ -145,7 +147,7 @@ var initializeToolboxButtons = function(){
 	    count ++;
 	}
 	
-	
+	updateButtonStates();
 };
 
 ////////////////////////////////////////////////

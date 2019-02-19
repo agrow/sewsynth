@@ -1,16 +1,19 @@
 
 
-var CustomTool = function(name, type){
+var CustomTool = function(name, type, drawingSettings){
 	
-	this.paperTool = new paper.Tool();
 	this.name = name;
 	this.type = type;
+	
+	// The settings in this object should directly correspond to paperjs.Path
+	// ie, path.strokeColor = drawomgSettomgs.strokeColor
+	this.drawingSettings = drawingSettings;
 	
 	
 	//this.path = null;
 	// TODO: cavas handler tool settings, if needed
 	if(type !== undefined && type == "drawing"){
-		this.setupDrawingTool(name);
+		//this.setupDrawingTool(name);
 	}
 	// TODO: Design settings -- how many paths?
 	
@@ -22,6 +25,35 @@ var CustomTool = function(name, type){
 	return this;
 };
 
+CustomTool.prototype.setCanvasToolProperties = function(event, canvasPath){
+	// defaults
+	
+	// TODO: Figure out how to set these from the tools.js
+	//canvasTool.minDistance = 4;
+	//canvasTool.maxDistance = 10;
+	
+	canvasPath.opacity = 0.5;
+	
+	// custom
+	if(this.drawingSettings !== null && this.drawingSettings !== undefined){
+		for (var key in this.drawingSettings) {
+		    // skip loop if the property is from prototype
+			if (!this.drawingSettings.hasOwnProperty(key)) continue;
+			
+			// Hopefully this works!!!
+			if(canvasPath[key] !== undefined){
+				canvasPath[key] = this.drawingSettings[key];
+				console.log("setting canvasTool key with value ", key, this.drawingSettings[key]);
+			} else {
+				console.log("OOOPS NO CANVAS TOOL WITH KEY ", key);
+			}
+		}
+	}
+	
+	return canvasPath;
+};
+
+/*
 // TODO: min/max/settings
 CustomTool.prototype.setupDrawingTool =  function(name){
 	this.paperTool.parent = this;
@@ -70,21 +102,23 @@ CustomTool.prototype.setupDrawingTool =  function(name){
 CustomTool.prototype.setupEditingTool =  function(){
 	// on mouse events should be based on picking existing paths
 };
-
+*/
 ////////////////////////////////////////////////////////
 // The GUI handler deactivates the current tool and activates the right one
 // based on the buttons that the user presses
 CustomTool.prototype.activate = function(){
-	this.paperTool.activate(); // add to paper js scope
-	global.selectedTool = this.paperTool.name;
-	console.log("activating tool " + this.paperTool.name, this.paperTool);
+	//this.paperTool.activate(); // add to paper js scope
+	
+	global.selectedTool = this.name;
+	console.log("activating tool " + this.name);
 };
 
 // This SHOULD turn off the tool, I hope
 // If not, we have to turn off/remove the events that setup__Tool adds
 CustomTool.prototype.deactivate = function(){
-	this.paperTool.remove(); // take sit off the paper js scope
-	console.log("removing/deactivating tool " + this.paperTool.name, this.paperTool);
+	//this.paperTool.remove(); // take sit off the paper js scope
+	//this.paperTool.deactivate(); // NOT A FUNCTION
+	console.log("removing/deactivating tool " + this.name);
 };
 
 ////////////////////////////////////////////////////
@@ -96,31 +130,51 @@ var toolLibrary = {
 	//////// DRAWING //////////
 	//////////////////////////////
 	plainLine: new CustomTool(
-		"plainLine","drawing"
+		"plainLine","drawing",
+		// Drawing settings for the line. These override the defaults
+		{
+			strokeColor:'black'
+		}
 		// canvas handler tool just needs a min
 		// Design settings needs 1 path
 		// No generation settings
 	),
 	sketchNoise: new CustomTool(
-		"sketchNoise", "drawing"
+		"sketchNoise", "drawing",
+		// Drawing settings for the line. These override the defaults
+		{
+			strokeColor:'red'
+		}
 		// canvas handler tool needs min & small max lines
 		// Design settings needs 1 path
 		// Generation settings need loooow frequency, low iterations, low
 	),
 	sketchNoiseDouble: new CustomTool(
-		"sketchNoiseDouble", "drawing"
+		"sketchNoiseDouble", "drawing",
+		// Drawing settings for the line. These override the defaults
+		{
+			strokeColor:'blue'
+		}
 		// canvas handler tool needs min & small max lines
 		// Design settings needs 2 paths
 		// Generation settings need loooow frequency, low iterations, low
 	),
 	sketchHighNoise: new CustomTool(
-		"sketchHighNoise", "drawing"
+		"sketchHighNoise", "drawing",
+		// Drawing settings for the line. These override the defaults
+		{
+			strokeColor:'green'
+		}
 		// canvas handler tool needs min and small max lines
 		// Design settings needs 1 paths
 		// Generation settings need high frequency and an angle
 	),
 	swingNoise: new CustomTool(
-		"swingNoise", "drawing"
+		"swingNoise", "drawing",
+		// Drawing settings for the line. These override the defaults
+		{
+			strokeColor:'orange'
+		}
 		// canvas handler tool needs min & small max lines
 		// Design settings needs 1 path
 		// Generation settings needs 2 sets of generation settings
@@ -129,20 +183,32 @@ var toolLibrary = {
 	),
 	////////////////////
 	speedyDrawing: new CustomTool(
-		"speedyDrawing", "drawing"
+		"speedyDrawing", "drawing",
+		// Drawing settings for the line. These override the defaults
+		{
+			strokeColor:'yellow'
+		}
 		// canvas handler tool needs min & max
 		// Design settings needs 2 paths
 		// Generation settings need density (if none, draw outlines)
 	),
 	///////////////////
 	echoExact: new CustomTool(
-		"echoExact", "drawing"
+		"echoExact", "drawing",
+		// Drawing settings for the line. These override the defaults
+		{
+			strokeColor:'lime'
+		}
 		// canvas handler tool min
 		// Design settings needs 1 path
 		// no generation settings
 	),
 	echoTangent: new CustomTool(
-		"echoTangent", "drawing"
+		"echoTangent", "drawing",
+		// Drawing settings for the line. These override the defaults
+		{
+			strokeColor:'cyan'
+		}
 		// canvas handler tool needs min
 		// Design settings needs 1 path
 		// no generation settings

@@ -18,10 +18,12 @@ var CanvasHandler = function(canvasID){
 	this.canvas = document.getElementById(canvasID);
 	paper.setup(this.canvas);
 	
-	/*
+	
 	
 	//TESTING
 	this.drawingTool = new Tool();
+	
+	// TODO: Figure out how to set these from the tools.js
 	this.drawingTool.minDistance = 4;
 	this.drawingTool.maxDistance = 10;
 	//this.activePath = null;
@@ -30,10 +32,13 @@ var CanvasHandler = function(canvasID){
 	this.drawingTool.onMouseDown = function(event){
 		//global.CanvasHandler.activePath = new Path();
 		path = new Path();
-		path.strokeColor = 'black';
+		//path.strokeColor = 'black';
 		path.add(event.point);
 		path.selected = true;
-		path.opacity = 0.5;
+		//path.opacity = 0.5;
+		
+		console.log("*** mousedown! ***", path);
+		global.toolLibrary[global.selectedTool].setCanvasToolProperties(event, path);
 	};
 	
 	this.drawingTool.onMouseDrag = function(event){
@@ -41,7 +46,7 @@ var CanvasHandler = function(canvasID){
 	};
 	
 	this.drawingTool.onMouseUp = function(event){
-		//console.log("mouseup", path);
+		//console.log("*** mouseUP! ***", path);
 		path.selected = false;
 		try{
 			//global.mainDesignHandler.addPaperJSPath(path, true);
@@ -56,7 +61,7 @@ var CanvasHandler = function(canvasID){
 		
 		//console.log("deselected", path);
 	};
-	*/
+	
 	
 	this.customTool = global.toolLibrary.plainLine;
 	this.customTool.activate();
