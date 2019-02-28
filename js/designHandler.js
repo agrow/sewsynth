@@ -6,7 +6,8 @@ var DesignHandler = function(){
 	this.activeDesign = null;
 	this.scale = 2;
 	
-	this.lastSelectedLineType = "path-segmented";
+	//this.lastSelectedLineType = "path";
+	this.lastSelectedLineType = "";
 	// 121 is the default max distance a stitch can go.
 	// However, if we aim to make a stitch approximately every 2.5 mm, that would be every 25 units?
 	this.threshold = 121; // 121 is the default max distance a stitch can go.

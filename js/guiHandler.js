@@ -78,10 +78,21 @@ var moveMenu = function(ID, toX, toY){
 // Main's global.calcHeight size is the mainDiv... $("#mainDiv").height();
 // We need THE WHOLE ENCHILADA!
 var updateMenuPositions = function(){
+	
+	////////////////////
+	// DEPRICATED -- Used for old view options
+	// Currently useless for the user to understand
+	// and soaks up unnecessary computing power
+	////////////////////
+	/*
 	moveMenu("view_options", $("#hundred").width()-$("#view_options").outerWidth(true), 0);
-	moveMenu("print", 0, $("#hundred").height()-$("#print").outerHeight(true));
-	moveMenu("toolbox", 0, 50);
 	moveMenu("image_options", $("#design_options").outerWidth() + 5, 0);
+	*/
+	
+	moveMenu("image_options", $("#hundred").width()-$("#image_options").outerWidth(true), 0);
+	moveMenu("toolbox", 0, 50);
+	moveMenu("print", 0, $("#hundred").height()-$("#print").outerHeight(true));
+	
 };
 
 var updateButtonStates = function(){
@@ -156,8 +167,14 @@ var initializeToolboxButtons = function(){
 var initilizeMenus = function(){
 	// Menus should, on enter and exit, show/hide their content.
 	// !!! NOTE: Make sure IDs match in this function! And in main's global! !!!
+	
+	////////////////////
+	// DEPRICATED -- Used for old view options
+	// Currently useless for the user to understand
+	// and soaks up unnecessary computing power
+	////////////////////
+	/*
 	setupMenu("design_options");
-	setupMenu("image_options");
 	setupMenu("view_options");
 	
 	// Line simplifier function slider //#lineSimplifierTolerance
@@ -192,6 +209,17 @@ var initilizeMenus = function(){
 	$( "input[type='radio']" ).checkboxradio().on("change", function(e){ global.mainDesignHandler.updatePathSelection($( e.target ).val()); });
 	//(v this hides the radio selector)
 	updateMenuVisibilityContents(["design_options", "view_options", "image_options"]);
+	
+	*/
+	
+	setupMenu("image_options");
+	addSliderToGUI("image_options", "edgeThreshold", "Edge Detection Threshold", {
+															min: 0, max: 300, step: 1, value:100,
+															change: function(event, ui){ global.mainCanvasHandler.reloadImageFromGUI(); },
+															slide: function(event, ui){ global.mainCanvasHandler.reloadImageFromGUI(); } 
+	});
+	
+	updateMenuVisibilityContents(["image_options"]);
 	
 	// BUTTONS!
 	// This one is not invisible, so we just add it manually and let it float...

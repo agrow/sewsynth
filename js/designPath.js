@@ -138,6 +138,7 @@ var DesignPath = function(parentDesign, pPath){
 	this.pixelsPerMM = 10;
 	// this is a MAX length. any uneven length is distributed between the ceiling of the division
 	this.stitchLengthPixels = undefined;
+	console.log("Setting default sewn stitch length");
 	this.setSewnStitchLength(this.stitchLengthMM, this.pixelsPerMM);
 	
 	return this;
@@ -518,6 +519,21 @@ DesignPath.prototype.selectAndShowPaths = function(params){
 		//console.log(paramPath.reportDisplayString());
 	}
 	
+	// None is selected, so we show everything and select nothing
+	if(parsedParams.length == 0){
+		console.log("SettingPathDrawingProperties to all visible & selected false");
+		this.setPathDrawingProperties({
+			"path": {visible: true, selected:false},
+			"path.sewnPath": {visible: true, selected:false},
+			"simplifiedPath": {visible: true, selected:false},
+			"simplifiedPath.sewnPath": {visible: true, selected:false},
+			"flattenedPath": {visible: true, selected:false},
+			"flattenedPath.sewnPath": {visible: true, selected:false},
+			"generatedPath": {visible: true, selected:false},
+			"generatedPath.sewnPath": {visible: true, selected:false},
+		});
+	}
+	
 	//console.log("flattenedPath VISIBLE?!", this.derivitivePaths.flattenedPath);
 	// If we have shown ANYTHING, we should make sure it has the most up-to-date drawing properties
 	// -> moving this earlier to save the visibility settings BEFORE applying them
@@ -538,22 +554,25 @@ DesignPath.prototype.setPathDrawingProperties = function(params){
 		console.log("Cannot setPathDrawingProperties without params", params);
 		return;
 	}
+	console.log("setPathDrawingProperties", params);
 	for (var key in params) {
 	    // skip loop if the property is from prototype
 	    if (!params.hasOwnProperty(key)) continue;
-	    console.log("setting params[key]", params, key);
+	    console.log("setting params[key]", key, params[key]);
 	
 		// params[key] == parsedPath string
 	    if (params[key] !== null){
 	    	for(var doubleKey in params[key]){
-	    		if (!params[key][doubleKey].hasOwnProperty(doubleKey)) continue;
+	    		console.log("--- double key within params[key]", doubleKey);
 	    		
-	    		//console.log("setting params[key][doubleKey]", params[key], doubleKey);
+	    		if (!params[key].hasOwnProperty(doubleKey)) continue;
+	    		
+	    		console.log("setting params[key][doubleKey]", params[key], doubleKey);
 	    		// lastDisplaySettings[params[key]][doubleKey] is the lastDisplaySettings for stroke, etc.
 	    		// params[key][doubleKey] is the "strokeColor" etc. from the params
 	    		// THIS WORKS BECAUSE ALL THE params[key] ARE THE SAME STRINGS AS parsedParams
 	    		if(params[key][doubleKey] !== null){
-	    			this.lastDisplaySettings[params[key]][doublekey] = params[key][doubleKey];
+	    			this.lastDisplaySettings[key][doubleKey] = params[key][doubleKey];
 	    		}
 	    	
 	    	}
@@ -572,6 +591,7 @@ DesignPath.prototype.setPathDrawingProperties = function(params){
 // IF YOU DO NOT WANT DEFAULT SETTINGS, CALL this.setPathDrawingProperties FIRST
 DesignPath.prototype.applyPathDrawingProperties = function(){
 	console.log("Setting pathDrawingProperties...");
+	console.log("THIS LAST DISPLAY SETTINGS: ", this.lastDisplaySettings);
 	if(this.paperPath !== null){
 		for (var key in this.lastDisplaySettings.path) {
 		    // skip loop if the property is from prototype
@@ -740,9 +760,17 @@ DesignPath.prototype.regenerateAllPaths = function(params){
 			this.setNewPaperPath(params.path);
 		}
 	}
-	this.generatePaperPathSewnPath();
-	this.generateSimplifiedPath(params);
-	this.generateFlattenedPath(params);
+	// TODO: Make sewing paths work
+	//this.generatePaperPathSewnPath();
+	
+	////////////////////
+	// DEPRICATED -- Used for old view options
+	// Currently useless for the user to understand
+	// and soaks up unnecessary computing power
+	////////////////////
+	//this.generateSimplifiedPath(params);
+	//this.generateFlattenedPath(params);
+	//
 	this.generatePath(params);
 	
 };
@@ -991,7 +1019,8 @@ DesignPath.prototype.generatePath = function(params){
 	}
 	*/
 	// regenerate sewn path
-	this.derivitivePaths.generatedPath.sewnPath = this.roundPathPoints(this.calcSewnPath(this.derivitivePaths.generatedPath));
+	// TODO: Make sewing paths work
+	//this.derivitivePaths.generatedPath.sewnPath = this.roundPathPoints(this.calcSewnPath(this.derivitivePaths.generatedPath));
 	
 	
 	// FLAG IS NOW CLEAN

@@ -38,7 +38,7 @@ Design.prototype.deactivate = function(){
 		
 		this.active = false;
 	} else {
-		console.log("Cannot deactivate an already deactive design");
+		console.log("Cannot deactivate an already deactive design", this);
 	}
 };
 
@@ -56,7 +56,7 @@ Design.prototype.reactivate = function(){
 		}
 		this.active = true;
 	} else {
-		console.log("Cannot activate an already active design");
+		console.log("Cannot activate an already active design", this);
 	}
 };
 
@@ -68,12 +68,12 @@ Design.prototype.reactivate = function(){
 Design.prototype.makeNewPath = function(path){
 	var newPath = null;
 	try {
-	if(path !== undefined && path !== null){
-		newPath = new DesignPath(this, path);
-	} else {
-		newPath = new DesignPath(this);
-	}
-	this.paths.push(newPath);
+		if(path !== undefined && path !== null){
+			newPath = new DesignPath(this, path);
+		} else {
+			newPath = new DesignPath(this);
+		}
+		this.paths.push(newPath);
 	} catch (e) {
 		global.mainErrorHandler.error(e);
 	}

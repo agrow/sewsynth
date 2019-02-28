@@ -154,7 +154,7 @@ DesignGenerator.prototype.applyNoiseToPath = function(path, params){
 		var xvalue = this.sumOcatave(iterations, newPath.segments[i].point.x, newPath.segments[i].point.y, persistence, freq, low, high);
 		var yvalue = this.sumOcatave(iterations, xvalue, newPath.segments[i].point.y, persistence, freq, low, high);
 		
-		console.log("noise values for i ", i, xvalue, yvalue);
+		//console.log("noise values for i ", i, xvalue, yvalue);
 		newPath.segments[i].point.x += xvalue;
 		
 		newPath.segments[i].point.y += yvalue;
