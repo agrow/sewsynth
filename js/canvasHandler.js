@@ -29,12 +29,15 @@ var CanvasHandler = function(canvasID){
 	//this.activePath = null;
 	var path = null;
 	
+	// the id of the action we are creating via drawing on the canvas
+	var activeActionID = null;
+	
 	this.drawingTool.onMouseDown = function(event){
 		//global.CanvasHandler.activePath = new Path();
 		path = new Path();
 		//path.strokeColor = 'black';
 		path.add(event.point);
-		path.selected = true;
+		//path.selected = true;
 		//path.opacity = 0.5;
 		
 		console.log("*** mousedown! ***", path);
@@ -42,12 +45,41 @@ var CanvasHandler = function(canvasID){
 	};
 	
 	this.drawingTool.onMouseDrag = function(event){
+		///// This will be the default style of the design line 
+		path.dashArray = [4, 0];
+		////////////////////////////////////////////////////////////////////
 		path.add(event.point);
+		
+		try{
+			if(path.segments.length == 2){
+				//global.mainDesignHandler.addPaperJSPath(path, true);
+				activeActionID = global.mainDesignHandler.actionDesignCreate({
+					"obj" : global.mainDesignHandler,
+					"path" : path
+					// design must be true for actionDesignCreate
+				});
+			} else if (path.segments.length > 2){
+				// Edit the design we just created
+				global.mainHistoryHandler.doEdit(activeActionID, {
+					"path" : path
+				});
+				
+			}
+			
+		} catch (e){
+			global.mainErrorHandler.error(e);
+		}
+		
+		///// This will be the default style of the drawing line
+		path.dashArray = [2,4];
+		////////////////////////////////////////////////////////////////////
 	};
 	
 	this.drawingTool.onMouseUp = function(event){
 		//console.log("*** mouseUP! ***", path);
-		path.selected = false;
+		//path.selected = false;
+		global.mainDesignHandler.completeLivePaperJSPath();
+		/*
 		try{
 			//global.mainDesignHandler.addPaperJSPath(path, true);
 			global.mainDesignHandler.actionDesignCreate({
@@ -57,7 +89,9 @@ var CanvasHandler = function(canvasID){
 			});
 		} catch (e){
 			global.mainErrorHandler.error(e);
-		}
+		}*/
+		
+		//TODO: deselect the path
 		
 		//console.log("deselected", path);
 	};

@@ -206,7 +206,7 @@ DesignPath.prototype.parseParams = function(params){
 		}
 	}
 	
-	console.log("parsed params RESULTS: ", results);
+	//console.log("parsed params RESULTS: ", results);
 	return results;
 };
 
@@ -327,6 +327,12 @@ DesignPath.prototype.calcSewnPath = function(path){
 ///////////////////////////////////////////////////////////////////
 //////////// SETTERS //////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////
+
+// Accepts new path from active drawing. Need to redraw all now-dirty paths
+DesignPath.prototype.acceptNewJSPath = function(path){
+	this.paperPath = path;
+	this.setAllPathsDirty();
+};
 
 // Sets the flags that all paths should be re-generated
 // Should be called when this.paperPath is changed
@@ -521,7 +527,7 @@ DesignPath.prototype.selectAndShowPaths = function(params){
 	
 	// None is selected, so we show everything and select nothing
 	if(parsedParams.length == 0){
-		console.log("SettingPathDrawingProperties to all visible & selected false");
+		//console.log("SettingPathDrawingProperties to all visible & selected false");
 		this.setPathDrawingProperties({
 			"path": {visible: true, selected:false},
 			"path.sewnPath": {visible: true, selected:false},
@@ -554,20 +560,20 @@ DesignPath.prototype.setPathDrawingProperties = function(params){
 		console.log("Cannot setPathDrawingProperties without params", params);
 		return;
 	}
-	console.log("setPathDrawingProperties", params);
+	//console.log("setPathDrawingProperties", params);
 	for (var key in params) {
 	    // skip loop if the property is from prototype
 	    if (!params.hasOwnProperty(key)) continue;
-	    console.log("setting params[key]", key, params[key]);
+	    //console.log("setting params[key]", key, params[key]);
 	
 		// params[key] == parsedPath string
 	    if (params[key] !== null){
 	    	for(var doubleKey in params[key]){
-	    		console.log("--- double key within params[key]", doubleKey);
+	    		//console.log("--- double key within params[key]", doubleKey);
 	    		
 	    		if (!params[key].hasOwnProperty(doubleKey)) continue;
 	    		
-	    		console.log("setting params[key][doubleKey]", params[key], doubleKey);
+	    		//console.log("setting params[key][doubleKey]", params[key], doubleKey);
 	    		// lastDisplaySettings[params[key]][doubleKey] is the lastDisplaySettings for stroke, etc.
 	    		// params[key][doubleKey] is the "strokeColor" etc. from the params
 	    		// THIS WORKS BECAUSE ALL THE params[key] ARE THE SAME STRINGS AS parsedParams
@@ -590,8 +596,8 @@ DesignPath.prototype.setPathDrawingProperties = function(params){
 // Pre: this.lastDisplaySettings[parsedParams] has some values
 // IF YOU DO NOT WANT DEFAULT SETTINGS, CALL this.setPathDrawingProperties FIRST
 DesignPath.prototype.applyPathDrawingProperties = function(){
-	console.log("Setting pathDrawingProperties...");
-	console.log("THIS LAST DISPLAY SETTINGS: ", this.lastDisplaySettings);
+	//console.log("Setting pathDrawingProperties...");
+	//console.log("THIS LAST DISPLAY SETTINGS: ", this.lastDisplaySettings);
 	if(this.paperPath !== null){
 		for (var key in this.lastDisplaySettings.path) {
 		    // skip loop if the property is from prototype
@@ -655,13 +661,14 @@ DesignPath.prototype.setSewnStitchLength = function(stitchLengthMM, pixelsPerMM)
 
 	this.stitchLengthPixels = stitchLengthMM * pixelsPerMM; 
 
-	console.log("Stitch Length Properties Set: " + this.stitchLengthMM + " * " + this.pixelsPerMM + " = " + this.stitchLengthPixels);
+	//console.log("Stitch Length Properties Set: " + this.stitchLengthMM + " * " + this.pixelsPerMM + " = " + this.stitchLengthPixels);
 };
 
 // Args: path is a paper.js path
 // Pre: none
 // Post: this.paperPath is set to the path
 //       all derivitive paths are marked as dirty
+/* NO BAD BAD BAD BAD .remove() takes it out of the canvas. If this is the same parent path, it's removed, gone poof!
 DesignPath.prototype.setNewPaperPath = function(path){
 	if(path == null){
 		console.log("setting a null path in setNewPaperPath?", path);
@@ -676,7 +683,7 @@ DesignPath.prototype.setNewPaperPath = function(path){
 	console.log("setNewPaperPath!", path);
 	// set dirty
 	this.setAllPathsDirty();
-};
+}; */
 
 // Args: path: non-null paper.js path
 // Pre: this.paperPath !== null
@@ -749,15 +756,19 @@ DesignPath.prototype.roundPathPoints = function(path){
 //			this.derivitivePaths.generatedPath
 //			this.derivitivePaths.generatedPath.sewnPath
 DesignPath.prototype.regenerateAllPaths = function(params){
-	console.log("RegenerateAllPaths", params);
+	//console.log("RegenerateAllPaths", params);
 	if(params !== undefined && params !== null){
 		if(params.stitchLength !== undefined && params.stitchLength !== null){
 			this.setSewnStitchLength(params.stitchLength, this.pixelsPerMM);
 		}
 		
+		
 		if(params.path !== undefined && params.path !== null){
-			console.log("setNewPaperPath", params.path);
-			this.setNewPaperPath(params.path);
+			//This is bad, this.setNewPaperPath(params.path); .removes the old path
+			//console.log("setNewPaperPath", params.path);
+			//this.setNewPaperPath(params.path);
+			this.acceptNewJSPath(params.path);
+			
 		}
 	}
 	// TODO: Make sewing paths work
@@ -903,18 +914,18 @@ DesignPath.prototype.parseGenerationParameters = function(params){
 	var newParams = {};
 	
 	if(params === undefined || params == null){
-		console.log("parsingGenerationParameters has no parameters to parse. Use last saved version", this.lastGenerationSettings);
+		//console.log("parsingGenerationParameters has no parameters to parse. Use last saved version", this.lastGenerationSettings);
 		params = this.lastGenerationSettings;
 	} 
 	/////////// PATH ////////////
 	if (params.generateSeedPath === undefined || params.generateSeedPath === null) {
 
-		console.log("called parseGenerationParameters with invalid parameters: must include a generateSeedPath", params);
-		console.log("parseGenerationParameters using last saved version", this.lastGenerationSettings);
+		//console.log("called parseGenerationParameters with invalid parameters: must include a generateSeedPath", params);
+		//console.log("parseGenerationParameters using last saved version", this.lastGenerationSettings);
 		params.generateSeedPath = this.lastGenerationSettings.generateSeedPath;
 	} 
 	
-	console.log("parseGenerationParameters parsing ", params.generateSeedPath);
+	//console.log("parseGenerationParameters parsing ", params.generateSeedPath);
 	switch(params.generateSeedPath) {
 	    case "path":
 	        newParams.path = this.paperPath;
@@ -948,15 +959,15 @@ DesignPath.prototype.parseGenerationParameters = function(params){
 	
 	
 	if(newParams.path === undefined || newParams.path === null){
-		console.log("FAILED TO PARSE A PATH from given params or last settings. BAD BAD BAD!!!", params, this.lastGenerationSettings, newParams);
+		throw new Error("FAILED TO PARSE A PATH from given params or last settings. BAD BAD BAD!!!", params, this.lastGenerationSettings, newParams);
 		return null;
 	}
 	
 	/////////// GENERATION TYPE ///////////
 	if (params.type === undefined || params.type === null) {
 
-		console.log("called parseGenerationParameters with invalid parameters: should include a type", params);
-		console.log("parseGenerationParameters using last saved type", this.lastGenerationSettings);
+		//console.log("called parseGenerationParameters with invalid parameters: should include a type", params);
+		//console.log("parseGenerationParameters using last saved type", this.lastGenerationSettings);
 		params.type = this.lastGenerationSettings.type;
 	} 
 	newParams.type = params.type;
@@ -966,7 +977,7 @@ DesignPath.prototype.parseGenerationParameters = function(params){
 	
 	///////////////////////////////////////
 	
-	console.log("Successfully parsed a new path params! Hurrah!", newParams);
+	//console.log("Successfully parsed a new path params! Hurrah!", newParams);
 	return newParams;
 
 };
@@ -1000,7 +1011,7 @@ DesignPath.prototype.generatePath = function(params){
 	// GENERATE IT
 	this.derivitivePaths.generatedPath = global.mainDesignGenerator.generate(parsedParams);
 	
-	console.log("Generated path", this.derivitivePaths.generatedPath);
+	//console.log("Generated path", this.derivitivePaths.generatedPath);
 	// When we have the params nailed, make sure to check/save them
 	/*
 	if(params === undefined || params.flatness === undefined){

@@ -81,6 +81,22 @@ Design.prototype.makeNewPath = function(path){
 	return newPath;
 };
 
+// TODO: search over current path to see if just new points need to be added
+// TODO: Not re-making a DesignPath but instead adding points
+// Post: designPath.paperPath is the newPath and all derivitive paths are marked as dirty
+// regeneratePathsInDesign should be called afterwards which will fix this issue...
+// WHAT HAPPENS IF THIS DESIGN HAS MORE THAN ONE PATH? WHICH ONE GETS UPDATED?
+// Probably the most recent one?
+Design.prototype.editPath = function(newPath){
+	try {
+		// should check that this.paths.length !== 0 and that newpath !== null & undefined...
+		this.paths[this.paths.length-1].acceptNewJSPath(newPath);
+		// console.log("From the design, editing to a WHOLE NEW DesignPath.");
+	} catch (e) {
+		global.mainErrorHandler.error(e);
+	}
+};
+
 // Round PATHPOINTS positions to their next whole number...
 Design.prototype.roundPathPoints = function(){
 	// Loop through all DesignPaths to round their points (and possibly points of all derived paths? Only derived paths?)
@@ -96,7 +112,7 @@ Design.prototype.regenerateAllDerivitivePaths = function(params){
 	// re-generates all flattened & simplified derivitive paths
 	// all paths should be clean & generatedPath should be ready to be overwritten
 	
-	console.log("regenerateAllDerivitivePaths,", params, this.paths);
+	//console.log("regenerateAllDerivitivePaths,", params, this.paths);
 	try{
 		for(var i = 0; i < this.paths.length; i++){
 			this.paths[i].regenerateAllPaths(params);
@@ -174,11 +190,11 @@ Design.prototype.hideAndDeselectAllPaths = function(){
 Design.prototype.showAndSelectPath = function(selectedParams){
 	// Find which paths in which generatedPaths need to be shown
 	// based on the strings sent from index.html
-	console.log("selecting and showing paths", selectedParams);
+	//console.log("selecting and showing paths", selectedParams);
 	this.lastSelectedParams = selectedParams;
 	
 	for(var i = 0; i < this.paths.length; i++){
-		console.log("processing paths on path id", i, this.paths[i]);
+		//console.log("processing paths on path id", i, this.paths[i]);
 		this.paths[i].selectAndShowPaths(selectedParams);
 		// TODO: this.testRelativeDesign() & this.testAsbSinDesign(0.3,4);
 	}

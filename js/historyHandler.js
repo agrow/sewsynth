@@ -5,15 +5,20 @@
  * 
  * A major component of HistoryHandler
  * 
+ * params are held by the action and hold any relevant child access info
+ * onDo, onUndo, onRedo, and onEdit are functions that will be called by the history manager
+ * as it deems necessary based on user input
  */
-var Action = function(params, onDo, onUndo, onRedo){
+var Action = function(params, onDo, onUndo, onRedo, onEdit){
 	console.log("in action", params);
 	console.log("in action", params.obj);
 	console.log("in action", params.path);
+	this.id = global.actionCount++;
 	this.params = params;
 	this.onDo = onDo;
 	this.onUndo = onUndo;
 	this.onRedo = onRedo;
+	this.onEdit = onEdit;
 	// this.destroy
 	
 	return this;
@@ -50,6 +55,7 @@ Action.prototype.fullPrint = function(log){
     console.log("onDo: ", this.onDo);
     console.log("onUndo: ", this.onUndo);
     console.log("onRedo: ", this.onRedo);
+    console.log("onEdit: ", this.onEdit);
 };
 
 /* HistoryHandler
@@ -137,5 +143,41 @@ HistoryHandler.prototype.doRedo = function(){
 	} else {
 		console.log("Cannot redo empty stack, do nothing");
 	}
+};
+
+// finds an action wherever it is (hopefully on the top of the add stack but who knows)
+// and edit its contents
+// PROBLEM...? how do we send info on the 'changes' to this function call?
+HistoryHandler.prototype.doEdit = function(actionID, editParams){
+	
+	// Find the action to edit
+	for(var i = 0; i < this.addStack.length; i++){
+		if(this.addStack[i].id == actionID){
+			this.log += "--- EDIT --- add id: " + actionID + "\n";
+		
+			try{
+				this.addStack[i].onEdit(editParams);
+			} catch (e) {
+				console.log(e);
+				console.log("editACTION problem!!!", this.addStack[i]);
+			}
+		}
+	}
+	
+	// This should probably never happen. Why did I do this?
+	for(var i = 0; i < this.subStack.length; i++){
+		if(this.subStack[i].id == actionID){
+			this.log += "--- EDIT --- sub id: " + actionID + "\n";
+		
+			try{
+				this.subStack[i].onEdit(editParams);
+			} catch (e) {
+				console.log(e);
+				console.log("editACTION problem!!!", this.subStack[i]);
+			}
+		}
+	}
+	
+	
 };
 

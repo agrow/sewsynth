@@ -1,3 +1,13 @@
+	////////////////////////////////////////////////////////
+	// current TESTING: Drawing a line live
+	// We do not want the line to be 'added' as an action and tracked until it is moused-up and complete
+	// But we do want to calculate its designPath as the user draws it
+	// There will necessarily be only 1 designPath active as this is being drawn
+	// The key here is separating the live construction (new path, adding points, calculating its properties) 
+	//		vs the event action that keeps track of the path being created.
+	// TODO this, we must make it such that mouse-move edits an active path that is not official
+	// And only on mouse up do we officially add the path to this.designs and the global action tracker
+
 
 var DesignHandler = function(){
 	this.designs = [];
@@ -53,8 +63,69 @@ DesignHandler.prototype.reactivateDesign = function(design){
 	
 };
 
+// pre: A line is created and length of 2 points. We make a bare bones design with this
+// we then attach it to the active design
+// Post: design is in this.designs
+//		activeDesign points to the right design
+//		the design has a new path with our pitiful length
+DesignHandler.prototype.initLivePaperJSPath = function(path, newDesign){
+	if(newDesign !== undefined && newDesign !== null && newDesign == true) {
+		this.makeAndSetNewDesign();
+	}
+	
+	if(this.designs[this.activeDesign] === null){
+		console.log("Cannot add path to null activeDesign...", this.designs[this.activeDesign], path);
+		global.mainErrorHandler.errorMsg("null activeDesign", this);
+		return;
+	}
+	
+	this.designs[this.activeDesign].makeNewPath(path);
+};
 
+// Gets called as each new point is added to the paperJS path. 
+// Is the action class by reference? We may need to update it in 2 places 
+// Either way, update it in designHandler and its child designs
+DesignHandler.prototype.updateLivePaperJSPath = function(path){
+	//console.log("Trying to updateLivePaperJSPath with a path", path);
+	this.designs[this.activeDesign].editPath(path);
+};
+
+// makes sure the action that created the path, the one of the initLivePaperJSPath, 
+// is made of the completed path as defined when mouse up occurs
+// this function also handles the deselection and such
+DesignHandler.prototype.completeLivePaperJSPath = function(path, newDesign){
+	
+	this.updatePathSelection(this.lastSelectedLineType);
+	console.log("completeLivePaperJSPath completed!"); //, path);
+};
+
+// TODO: you want some other generateSeedPath, put that in the params
+DesignHandler.prototype.regeneratePathsInDesign = function(id){
+	try{
+		//if(id == undefined || id == null || id < 0 || id >= this.designs.length){
+			
+		//}
+		// If these path parameters ever change, make sure to change them in regenerateAllDerivedPaths
+		this.designs[id].regenerateAllDerivitivePaths({	
+											//"path": path,
+											tolerance: getValueOfSlider("lineSimplifierTolerance"),
+											flatness: getValueOfSlider("lineFlatness"),
+										    stitchLength: getValueOfSlider("edgeThreshold"),
+										    generateSeedPath: "path"
+										    // Add any generation settings here
+										    });
+		//console.log("default path size ", path.segments.length);
+
+	} catch (e) {
+		global.mainErrorHandler.error(e);
+	}
+};
+
+// TODO: DEPRICATED: replace with init/update/complete LivePaperJSPath
+/*
 DesignHandler.prototype.addPaperJSPath = function(path, newDesign){
+	///////////////////////////////////////////////////////////////////////////////////
+	//////////////////// in initLivePaperJSPath //////////////////////
 	if(newDesign !== undefined && newDesign !== null && newDesign == true) {
 		this.makeAndSetNewDesign();
 	}
@@ -67,6 +138,8 @@ DesignHandler.prototype.addPaperJSPath = function(path, newDesign){
 	//console.log(this.designs);
 	//console.log(this.activeDesign);
 	this.designs[this.activeDesign].makeNewPath(path);
+	///////////////////////////////////////////////////////////////////////////////////
+	//////////////////// in regeneratePathsInDesign(designID) /////////////////////////
 	try{
 		// If these path parameters ever change, make sure to change them in regenerateAllDerivedPaths
 		this.designs[this.activeDesign].regenerateAllDerivitivePaths({	
@@ -78,15 +151,16 @@ DesignHandler.prototype.addPaperJSPath = function(path, newDesign){
 										    // Add any generation settings here
 										    });
 		console.log("default path size ", path.segments.length);
-		
-	
+		///////////////////////////////////////////////////////////////////////////////////
+		////////// same function 
 		this.updatePathSelection(this.lastSelectedLineType);
+		///////////////////////////////////////////////////////////////////////////////////
 		
 		console.log("paperJSPath imported to activeDesign complete"); //, path);
 	} catch (e) {
 		global.mainErrorHandler.error(e);
 	}
-};
+};*/
 
 // Decores the index.html names for selection... for now. 
 // Used by updatePathSelection
@@ -124,11 +198,11 @@ DesignHandler.prototype.parsePathSelection = function(selected){
 };
 
 DesignHandler.prototype.updatePathSelection = function(selected){
-	console.log("updating path to select ", selected);
+	//console.log("updating path to select ", selected);
 	this.lastSelectedLineType = selected;
 	parsedSelection = this.parsePathSelection(selected);
-	console.log("updatePathSeletion ", parsedSelection);
-	console.log("this.designs", this.designs);
+	//console.log("updatePathSeletion ", parsedSelection);
+	//console.log("this.designs", this.designs);
 	
 	for(var i = 0; i < this.designs.length; i++){
 		// Deselect all
@@ -257,7 +331,10 @@ DesignHandler.prototype.actionDesignCreate = function(params){
 			*/
 			try {
 				
-				this.params.obj.addPaperJSPath(this.params.path, true);
+				//this.params.obj.addPaperJSPath(this.params.path, true);
+				this.params.obj.initLivePaperJSPath(this.params.path, true);
+				this.params.obj.regeneratePathsInDesign(this.params.obj.activeDesign);
+				// Note: we are NOT updating the selection visibility yet
 			} catch (e) {
 				console.log(e);
 				console.log("design doACTION problem!!!", action);
@@ -286,15 +363,33 @@ DesignHandler.prototype.actionDesignCreate = function(params){
 			console.log(this.params);
 			
 			this.params.obj.reactivateDesign(this.params.deletedDesign);
+			// we SHOULD update the selection visibility as this design is complete at this stage
+		}, 
+		// edit
+		function(editParams){
+			//console.log("IN ACTIONDESIGNCREATE EDIT"); // happens way too often to print this XD
+			//console.log(this);
+			//console.log(editParams);
+			
+			// reset or change this.params.path
+			this.params.path = editParams.path;
+			// reset or change the activeDesign's path
+			this.params.obj.updateLivePaperJSPath(editParams.path);
+			// recalculate the generated path
+			this.params.obj.regeneratePathsInDesign(this.params.obj.activeDesign);
+			// Note: we are NOT updating the selection visibility yet
+			
 		}
 	);
 	
 	global.mainHistoryHandler.doAction(action);
+	return action.id;
 };
 
 // Includes movement, adding/subtracting points
-DesignHandler.prototype.actionDesignEdit = function(params){
-	
+DesignHandler.prototype.actionDesignEdit = function(id, editParams){
+	// find action that contains the path
+	//global.mainHistoryHandler.doEdit(id, editParams);
 };
 
 DesignHandler.prototype.actionDesignDelete = function(params){
