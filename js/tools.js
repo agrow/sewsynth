@@ -1,6 +1,6 @@
 
 
-var CustomTool = function(name, type, drawingSettings){
+var CustomTool = function(name, type, drawingSettings, noiseSettings){
 	
 	this.name = name;
 	this.type = type;
@@ -18,6 +18,7 @@ var CustomTool = function(name, type, drawingSettings){
 	// TODO: Design settings -- how many paths?
 	
 	// TODO: Design Path & Generation Settings for each path
+	this.noiseSettings = noiseSettings;
 	
 	// TODO: Name of graphical file to display as the icon
 	
@@ -125,6 +126,10 @@ CustomTool.prototype.deactivate = function(){
 ///////// Initializing Tool Library ///////////////
 ///////////////////////////////////////////////////
 
+// NOTE: THESE CONNECT DIRECTLY TO designGenerator.js
+// if you edit their names here, you must adjust the switch statement
+// in parseToolParams
+
 var toolLibrary = {
 	//////////////////////////////
 	//////// DRAWING //////////
@@ -144,19 +149,19 @@ var toolLibrary = {
 		// Drawing settings for the line. These override the defaults
 		{
 			strokeColor:'red'
+		},
+		// "noiseSettings"
+		{
+			num_iterations: 5, 
+			persistence: .7,
+			freq: .007, 
+			// normal noise is 0-1, remember this is pixels
+			// 10 gives us at least a solid number. with a distance away from the original point 
+			low: -30, 
+			high: 30
 		}
 		// canvas handler tool needs min & small max lines
 		// Design settings needs 1 path
-		// Generation settings need loooow frequency, low iterations, low
-	),
-	sketchNoiseDouble: new CustomTool(
-		"sketchNoiseDouble", "drawing",
-		// Drawing settings for the line. These override the defaults
-		{
-			strokeColor:'blue'
-		}
-		// canvas handler tool needs min & small max lines
-		// Design settings needs 2 paths
 		// Generation settings need loooow frequency, low iterations, low
 	),
 	sketchHighNoise: new CustomTool(
@@ -189,6 +194,16 @@ var toolLibrary = {
 			strokeColor:'yellow'
 		}
 		// canvas handler tool needs min & max
+		// Design settings needs 2 paths
+		// Generation settings need density (if none, draw outlines)
+	),
+	speedyEvenDrawing: new CustomTool(
+		"speedyEvenDrawing", "drawing",
+		// Drawing settings for the line. These override the defaults
+		{
+			strokeColor:'blue'
+		}
+		// canvas handler tool needs min & max to be the same
 		// Design settings needs 2 paths
 		// Generation settings need density (if none, draw outlines)
 	),

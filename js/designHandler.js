@@ -100,7 +100,7 @@ DesignHandler.prototype.completeLivePaperJSPath = function(path, newDesign){
 };
 
 // TODO: you want some other generateSeedPath, put that in the params
-DesignHandler.prototype.regeneratePathsInDesign = function(id){
+DesignHandler.prototype.regeneratePathsInDesign = function(id, toolType){
 	try{
 		//if(id == undefined || id == null || id < 0 || id >= this.designs.length){
 			
@@ -111,8 +111,9 @@ DesignHandler.prototype.regeneratePathsInDesign = function(id){
 											tolerance: getValueOfSlider("lineSimplifierTolerance"),
 											flatness: getValueOfSlider("lineFlatness"),
 										    stitchLength: getValueOfSlider("edgeThreshold"),
-										    generateSeedPath: "path"
+										    generateSeedPath: "path",
 										    // Add any generation settings here
+										    type: toolType
 										    });
 		//console.log("default path size ", path.segments.length);
 
@@ -333,7 +334,7 @@ DesignHandler.prototype.actionDesignCreate = function(params){
 				
 				//this.params.obj.addPaperJSPath(this.params.path, true);
 				this.params.obj.initLivePaperJSPath(this.params.path, true);
-				this.params.obj.regeneratePathsInDesign(this.params.obj.activeDesign);
+				this.params.obj.regeneratePathsInDesign(this.params.obj.activeDesign, this.params.type);
 				// Note: we are NOT updating the selection visibility yet
 			} catch (e) {
 				console.log(e);
@@ -376,7 +377,7 @@ DesignHandler.prototype.actionDesignCreate = function(params){
 			// reset or change the activeDesign's path
 			this.params.obj.updateLivePaperJSPath(editParams.path);
 			// recalculate the generated path
-			this.params.obj.regeneratePathsInDesign(this.params.obj.activeDesign);
+			this.params.obj.regeneratePathsInDesign(this.params.obj.activeDesign, this.params.type);
 			// Note: we are NOT updating the selection visibility yet
 			
 		}

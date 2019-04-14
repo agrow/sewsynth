@@ -55,13 +55,15 @@ var CanvasHandler = function(canvasID){
 				//global.mainDesignHandler.addPaperJSPath(path, true);
 				activeActionID = global.mainDesignHandler.actionDesignCreate({
 					"obj" : global.mainDesignHandler,
-					"path" : path
+					"path" : path,
+					"type" : global.selectedTool
 					// design must be true for actionDesignCreate
 				});
 			} else if (path.segments.length > 2){
 				// Edit the design we just created
 				global.mainHistoryHandler.doEdit(activeActionID, {
-					"path" : path
+					"path" : path,
+					"type" : global.selectedTool
 				});
 				
 			}

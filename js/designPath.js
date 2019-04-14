@@ -108,14 +108,14 @@ var DesignPath = function(parentDesign, pPath){
 	
 	// Save them drawing styles for the paper.js canvas
 	this.lastDisplaySettings = {
-		path:						{strokeColor:'black', opacity: 0.5},//, visible: true, selected: true},
-		"path.sewnPath": 			{strokeColor: 'black', opacity: 1},//, visible: true, selected: true},
-		simplifiedPath: 			{strokeColor: 'blue', opacity: 0.5},//, visible: true, selected: true},
-		"simplifiedPath.sewnPath": 	{strokeColor: 'blue', opacity: 1},//, visible: true, selected: true},
-		flattenedPath: 				{strokeColor: 'green', opacity: 0.5},//, visible: true, selected: true},
-		"flattenedPath.sewnPath":	{strokeColor: 'green', opacity: 1},//, visible: true, selected: true},
-		generatedPath: 				{strokeColor: 'red', opacity: 0.5},//, visible: true, selected: true},
-		"generatedPath.sewnPath":	{strokeColor: 'red', opacity: 1}//, visible: true, selected: true}
+		path:						{opacity: 0.5},//, visible: true, selected: true},
+		"path.sewnPath": 			{opacity: 1},//, visible: true, selected: true},
+		simplifiedPath: 			{opacity: 0.5},//, visible: true, selected: true},strokeColor: 'blue', 
+		"simplifiedPath.sewnPath": 	{opacity: 1},//, visible: true, selected: true},
+		flattenedPath: 				{opacity: 0.5},//, visible: true, selected: true},
+		"flattenedPath.sewnPath":	{opacity: 1},//, visible: true, selected: true},
+		generatedPath: 				{opacity: 0.5},//, visible: true, selected: true},
+		"generatedPath.sewnPath":	{opacity: 1}//, visible: true, selected: true}
 	};
 	
 	this.allParsedParamOptions = [	"path", "path.sewnPath", 
@@ -151,7 +151,7 @@ var DesignPath = function(parentDesign, pPath){
 // to alleviate copyPaste, this function does all the null and undefined checks
 DesignPath.prototype.parseParams = function(params){
 	var results = [];
-	console.log("Parsing params", params);
+	//console.log("Parsing params", params);
 	//console.log("COME ON FLATTENEDPATH", params.flattenedPath);
 	if(params === undefined || params === null){
 		console.log("parseParams() called with undefined or null params", params);
@@ -968,6 +968,7 @@ DesignPath.prototype.parseGenerationParameters = function(params){
 
 		//console.log("called parseGenerationParameters with invalid parameters: should include a type", params);
 		//console.log("parseGenerationParameters using last saved type", this.lastGenerationSettings);
+		console.log("WE SHOULD NOT BE USING UNDEFINED PARAM TYPES ANYMORE!!!");
 		params.type = this.lastGenerationSettings.type;
 	} 
 	newParams.type = params.type;

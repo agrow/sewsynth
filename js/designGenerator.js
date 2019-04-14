@@ -1,6 +1,12 @@
 var DesignGenerator = function(){
 	this.verbose = false;
 	
+	// generation things sometimes require some seeds. We should save these where necessary
+	this.noiseSeeds = [];
+	for(var i = 0; i < 5; i++){
+		this.noiseSeeds.push(Math.random());
+	}
+	/*
 	this.defaultNoiseSettings = {
 		num_iterations: 5, 
 		persistence: .7,
@@ -10,25 +16,13 @@ var DesignGenerator = function(){
 		low: -30, 
 		high: 30
 	};
-	
+	*/
 	return this;
 }; // DesignGenerator
 
 ////////////////////////////////////////////////////////////////////////
 /////// INPUT/INTERFACE //////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
-
-// Input: params:{
-//		path:   	 
-//		type: (relative/absolute/sketchNoise) 	 
-//		noiseSettings: (num_iterations, persistence, freq, low, high) // there are defaults for all of these  	 
-//		path:  	 
-//		path:  	 
-//		path:  	 
-// }
-// 
-// Output: a list of newly points
-//
 
 DesignGenerator.prototype.generate = function(params){
 	if(params === undefined || params === null){
@@ -41,20 +35,92 @@ DesignGenerator.prototype.generate = function(params){
 		return null;
 	}
 	
-	if(params.type == "relative"){
-		var relativeNewPoints = this.scaleYPointPosition( [new Point(.33, 1), new Point(.66, -1)], 50);
-		var points = this.getPathPointsOfPaperJSPath(params.path);
-		
-		return new Path(this.generatePathRelativeToDesignLines(points, relativeNewPoints));
-	} else if (params.type == "sketchNoise"){
-		// TODO: num_iterations, persistence, freq, low, high
-		// TODO: integrate angles into any paths off the standard line
-		return this.applyNoiseToPath(params.path, params.noiseSettings);
-		
-	} else {
-		console.log("generate sent invalid path type", params.type);
-		return null;
+	return this.parseToolParams(params);
+};
+
+// Input: params:{
+//		path:   	 
+//		type: (toolLibrary names) 	 
+//		noiseSettings: (num_iterations, persistence, freq, low, high) // there are defaults for all of these  	 
+//		path:  	 
+//		path:  	 
+//		path:  	 
+// }
+// 
+// Output: a list of newly points
+//
+
+// NOTE: these directly relate to the tools.js library
+// ie global.toolLibrary[name] will have GLOBAL/DEFAULT properties for these tools
+// however, paths might hold their own settings later...
+// It should use the key name for the tool and look up the settings
+DesignGenerator.prototype.parseToolParams =  function(params){
+	// Each of these options should return a newPath
+	// TODO: in the future, this generator will return multiple paths
+	// FOR NOW, plainLine will just return a clone of the original path
+	// we technically don't have to "generate" anything, however it means
+	// that we can call upon the 'generated path' in any instance of any tool
+	// and come back with the appropriate path(s)
+	// ... unless this causes a problem
+	var newPath = null;
+	
+	try{
+	
+		switch(params.type) {
+		    case "plainLine":
+		        // For now we'll just return the relative break-down? Or should we just clone it?
+		        newPath = params.path.clone();
+		        
+		        //var relativeNewPoints = this.scaleYPointPosition( [new Point(.33, 1), new Point(.66, -1)], 50);
+				//var points = this.getPathPointsOfPaperJSPath(params.path);
+				//newPath = new Path(this.generatePathRelativeToDesignLines(points, relativeNewPoints));
+		        
+		        break;
+		        // currently there is no difference between relative and absolute
+		        // maybe if we find a meaningful difference I can be bothered to add those settings
+		    //case "absolute": // vs "relative"
+		    //    
+		    //    break;
+		    case "sketchNoise":
+		    	
+		        newPath = this.applyNoiseToPath(params.path, this.fetchDefaultToolNoiseSettings(params.type));
+		        
+		        break;
+		    case "sketchHighNoise":
+		        
+		        break;
+		    case "swingNoise":
+		        
+		        break;
+		    case "speedyDrawing":
+		        
+		        break;
+		    case "speedyEvenDrawing":
+		        
+		        break;
+		    case "echoExact":
+		        
+		        break;
+		    case "echoTangent":
+		        
+		        break;
+		    case "plainSatin":
+		        
+		        break;
+		    
+		    default:
+		    	console.log("No case for parsing tool params.type", params);
+		        break;
+		}
+	} catch (e) {
+		console.log("PROBLEM WITH NEWPATH", newPath);
 	}
+	
+	return newPath;
+};
+
+DesignGenerator.prototype.fetchDefaultToolNoiseSettings = function(type){
+	return global.toolLibrary[type].noiseSettings;
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -121,14 +187,14 @@ DesignGenerator.prototype.applyAngle = function(originPath, generatedPath, radiu
  */
 
 DesignGenerator.prototype.applyNoiseToPath = function(path, params){
-	var iterations = this.defaultNoiseSettings.num_iterations;
-	var persistence = this.defaultNoiseSettings.persistence;
-	var freq = this.defaultNoiseSettings.freq;
-	var low = this.defaultNoiseSettings.low;
-	var high = this.defaultNoiseSettings.high;
+	var iterations = null;
+	var persistence = null;
+	var freq = null;
+	var low = null;
+	var high = null;
 	
 	if(params !== undefined && params !== null){
-		console.log("NoiseToPath using some new settings", params);
+		//console.log("NoiseToPath using some new settings", params);
 		
 		if(params.num_iterations !== undefined && params.num_iterations !== null){
 			iterations = params.num_iterations;
@@ -147,6 +213,11 @@ DesignGenerator.prototype.applyNoiseToPath = function(path, params){
 		}
 	} else {
 		console.log("NoiseToPath using default noise settings", this.defaultNoiseSettings);
+		iterations = this.defaultNoiseSettings.num_iterations;
+		persistence = this.defaultNoiseSettings.persistence;
+		freq = this.defaultNoiseSettings.freq;
+		low = this.defaultNoiseSettings.low;
+		high = this.defaultNoiseSettings.high;
 	}
 	
 	var newPath = path.clone();
