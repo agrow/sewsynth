@@ -82,11 +82,15 @@ DesignGenerator.prototype.parseToolParams =  function(params){
 		    //    
 		    //    break;
 		    case "sketchNoise":
-		    	
 		        newPath = this.applyNoiseToPath(params.path, this.fetchDefaultToolNoiseSettings(params.type));
 		        
 		        break;
 		    case "sketchHighNoise":
+		    	newPath = this.apply1DNoiseToPath(params.path, this.fetchDefaultToolNoiseSettings(params.type));
+		        
+		        break;
+		    case "graffitiNoise":
+		    	newPath = this.applyNoiseToPath(params.path, this.fetchDefaultToolNoiseSettings(params.type));
 		        
 		        break;
 		    case "swingNoise":
@@ -185,8 +189,94 @@ DesignGenerator.prototype.applyAngle = function(originPath, generatedPath, radiu
 		high: 1,
 	}
  */
-
+// TODO: noise.seed(Math.random()); for the generator's appropriate seed
 DesignGenerator.prototype.applyNoiseToPath = function(path, params){
+	var iterations = null;
+	var persistence = null;
+	var freq = null;
+	var low = null;
+	var high = null;
+	
+	if(params !== undefined && params !== null){
+		//console.log("NoiseToPath using some new settings", params);
+		
+		if(params.num_iterations !== undefined && params.num_iterations !== null){
+			iterations = params.num_iterations;
+		}
+		if(params.persistence !== undefined && params.persistence !== null){
+			persistence = params.persistence;
+		}
+		if(params.freq !== undefined && params.freq !== null){
+			freq = params.freq;
+		}
+		if(params.low !== undefined && params.low !== null){
+			low = params.low;
+		}
+		if(params.high !== undefined && params.high !== null){
+			high = params.high;
+		}
+	} else {
+		console.log("NoiseToPath using default noise settings", this.defaultNoiseSettings);
+		iterations = this.defaultNoiseSettings.num_iterations;
+		persistence = this.defaultNoiseSettings.persistence;
+		freq = this.defaultNoiseSettings.freq;
+		low = this.defaultNoiseSettings.low;
+		high = this.defaultNoiseSettings.high;
+	}
+	// TODO: noise.seed(Math.random()); for the generator's appropriate seed
+	var newPath = path.clone();
+	for(var i = 0; i < newPath.segments.length; i++){
+		var xvalue = this.sumOcatave(iterations, newPath.segments[i].point.x, newPath.segments[i].point.y, persistence, freq, low, high);
+		var yvalue = this.sumOcatave(iterations, xvalue, newPath.segments[i].point.y/2, persistence, freq, low, high);
+		
+		//console.log("noise values for i ", i, xvalue, yvalue);
+		newPath.segments[i].point.x += xvalue;
+		
+		newPath.segments[i].point.y += yvalue;
+	}
+	return newPath;
+	
+};
+
+// num_iterations is how many ocataves of noise we average
+// x and y are the locations
+// persistence is the scale factor for each iteration, 
+//		<0 makes amp decrease over time, >0 makes amp increase over time
+// freq is the frequency
+// low/high are the range of values we are getting in return
+// https://cmaher.github.io/posts/working-with-simplex-noise/
+
+DesignGenerator.prototype.sumOcatave = function(num_iterations, x, y, persistence, freq, low, high){
+	
+	var noiseVal = this.sumOcataveUnscaled(num_iterations, x, y, persistence, freq);
+	// normalize the result
+	noiseVal = noiseVal * (high - low)/2 + (high + low)/2;
+	
+	return noiseVal;
+	
+};
+
+DesignGenerator.prototype.sumOcataveUnscaled = function(num_iterations, x, y, persistence, freq){
+	var maxAmp = 0;
+	var amp = 1;
+	var noiseVal = 0;
+	
+	// add successively smaller, higher-frequency terms
+	for(var i = 0; i < num_iterations; i++){
+		noiseVal += noise.simplex2(x * freq, y * freq) * amp;
+		maxAmp += amp;
+		amp *= persistence;
+		freq *= 2;
+	}
+	
+	// take the average value of the iterations
+	noiseVal /= maxAmp;
+	
+	return noiseVal;
+	
+};
+
+DesignGenerator.prototype.apply1DNoiseToPath = function(path, params){
 	var iterations = null;
 	var persistence = null;
 	var freq = null;
@@ -222,45 +312,19 @@ DesignGenerator.prototype.applyNoiseToPath = function(path, params){
 	
 	var newPath = path.clone();
 	for(var i = 0; i < newPath.segments.length; i++){
-		var xvalue = this.sumOcatave(iterations, newPath.segments[i].point.x, newPath.segments[i].point.y, persistence, freq, low, high);
-		var yvalue = this.sumOcatave(iterations, xvalue, newPath.segments[i].point.y, persistence, freq, low, high);
-		
+		var value = this.sumOcataveUnscaled(iterations, newPath.segments[i].point.x/10, newPath.segments[i].point.y/10, persistence, freq);
+		value = value * (Math.abs(high) + Math.abs(low));
+		if(i % 2 == 0){
+			newPath.segments[i].point.x += value;
+			newPath.segments[i].point.y += value;
+		} else {
+			newPath.segments[i].point.x -= value;
+			newPath.segments[i].point.y -= value;
+		}
 		//console.log("noise values for i ", i, xvalue, yvalue);
-		newPath.segments[i].point.x += xvalue;
 		
-		newPath.segments[i].point.y += yvalue;
 	}
 	return newPath;
-	
-};
-
-// num_iterations is how many ocataves of noise we average
-// x and y are the locations
-// persistence is the scale factor for each iteration, 
-//		<0 makes amp decrease over time, >0 makes amp increase over time
-// freq is the frequency
-// low/high are the range of values we are getting in return
-// https://cmaher.github.io/posts/working-with-simplex-noise/
-DesignGenerator.prototype.sumOcatave = function(num_iterations, x, y, persistence, freq, low, high){
-	var maxAmp = 0;
-	var amp = 1;
-	var noiseVal = 0;
-	
-	// add successively smaller, higher-frequency terms
-	for(var i = 0; i < num_iterations; i++){
-		noiseVal += noise.simplex2(x * freq, y * freq) * amp;
-		maxAmp += amp;
-		amp *= persistence;
-		freq *= 2;
-	}
-	
-	// take the average value of the iterations
-	noiseVal /= maxAmp;
-	
-	// normalize the result
-	noiseVal = noiseVal * (high - low)/2 + (high + low)/2;
-	
-	return noiseVal;
 	
 };
 

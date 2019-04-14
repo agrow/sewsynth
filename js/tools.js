@@ -152,13 +152,13 @@ var toolLibrary = {
 		},
 		// "noiseSettings"
 		{
-			num_iterations: 5, 
-			persistence: .7,
+			num_iterations: 1, 
+			persistence: .5,
 			freq: .007, 
 			// normal noise is 0-1, remember this is pixels
 			// 10 gives us at least a solid number. with a distance away from the original point 
-			low: -30, 
-			high: 30
+			low: -20, 
+			high: 20
 		}
 		// canvas handler tool needs min & small max lines
 		// Design settings needs 1 path
@@ -169,6 +169,36 @@ var toolLibrary = {
 		// Drawing settings for the line. These override the defaults
 		{
 			strokeColor:'green'
+		},
+		// "noiseSettings"
+		{
+			num_iterations: 7, 
+			persistence: .5,
+			freq: .5, 
+			// normal noise is 0-1, remember this is pixels
+			// 10 gives us at least a solid number. with a distance away from the original point 
+			low: -30, 
+			high: 30
+		}
+		// canvas handler tool needs min and small max lines
+		// Design settings needs 1 paths
+		// Generation settings need high frequency and an angle
+	),
+	graffitiNoise: new CustomTool(
+		"graffitiNoise", "drawing",
+		// Drawing settings for the line. These override the defaults
+		{
+			strokeColor:'blue'
+		},
+		// "noiseSettings"
+		{
+			num_iterations: 1, 
+			persistence: .5,
+			freq: .05, 
+			// normal noise is 0-1, remember this is pixels
+			// 10 gives us at least a solid number. with a distance away from the original point 
+			low: -40, 
+			high: 40
 		}
 		// canvas handler tool needs min and small max lines
 		// Design settings needs 1 paths
