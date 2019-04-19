@@ -18,6 +18,7 @@ var CanvasHandler = function(canvasID){
 	this.canvas = document.getElementById(canvasID);
 	paper.setup(this.canvas);
 	
+	this.debugPaths = [];
 	
 	
 	//TESTING
@@ -135,6 +136,24 @@ CanvasHandler.prototype.clear = function(width, height){
 ////////////////////////////////////////////
 //////// DRAWING EVENTS ////////////////////
 ////////////////////////////////////////////
+CanvasHandler.prototype.drawDebugLine = function(listOfPoints, color){
+	path = new Path();
+	//path.strokeColor = 'black';
+	for(var i = 0; i < listOfPoints.length; i++){
+		path.add(listOfPoints[i]);
+	}
+	path.strokeColor = color;
+	path.opacity = 1;
+	path.strokeWidth = 1;
+	this.debugPaths.push(path);
+};
+
+CanvasHandler.prototype.clearDebugLines = function(){
+	for(var i = this.debugPaths.length-1; i > 0; i--){
+		this.debugPaths[i].remove();
+	}
+};
+
 CanvasHandler.prototype.onDrawMouseDown = function(evt){
 	
 };

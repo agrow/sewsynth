@@ -35,6 +35,7 @@ DesignGenerator.prototype.generate = function(params){
 		return null;
 	}
 	
+	global.mainCanvasHandler.clearDebugLines();
 	return this.parseToolParams(params);
 };
 
@@ -118,6 +119,7 @@ DesignGenerator.prototype.parseToolParams =  function(params){
 		}
 	} catch (e) {
 		console.log("PROBLEM WITH NEWPATH", newPath);
+		console.log(e);
 	}
 	
 	return newPath;
@@ -190,6 +192,7 @@ DesignGenerator.prototype.applyAngle = function(originPath, generatedPath, radiu
 	}
  */
 // TODO: noise.seed(Math.random()); for the generator's appropriate seed
+// TODO: Neatly compine the overlapping code with noise1D version
 DesignGenerator.prototype.applyNoiseToPath = function(path, params){
 	var iterations = null;
 	var persistence = null;
@@ -275,7 +278,7 @@ DesignGenerator.prototype.sumOcataveUnscaled = function(num_iterations, x, y, pe
 	return noiseVal;
 	
 };
-
+// TODO: Neatly compine the overlapping code with regular noise version
 DesignGenerator.prototype.apply1DNoiseToPath = function(path, params){
 	var iterations = null;
 	var persistence = null;
@@ -314,14 +317,39 @@ DesignGenerator.prototype.apply1DNoiseToPath = function(path, params){
 	for(var i = 0; i < newPath.segments.length; i++){
 		var value = this.sumOcataveUnscaled(iterations, newPath.segments[i].point.x/10, newPath.segments[i].point.y/10, persistence, freq);
 		value = value * (Math.abs(high) + Math.abs(low));
-		if(i % 2 == 0){
-			newPath.segments[i].point.x += value;
-			newPath.segments[i].point.y += value;
+		
+		// If we are not the endpoints, find the tangent between
+		// the last and next points
+		var movementVector = null;
+		if(i > 0 && i < newPath.segments.length-1){
+			//movementVector = this.getRelTangentVector(path.segments[i-1].point, path.segments[i].point, path.segments[i+1].point);
+			movementVector = this.getRelPerpVector(path.segments[i-1].point, path.segments[i].point, path.segments[i+1].point);
+			
+			// if even, make the vector all positive so we move up
+			//movementVector.x = Math.abs(movementVector.x);
+			//movementVector.y = Math.abs(movementVector.y);
+			var temp = newPath.segments[i].point.clone();
+			temp.x += movementVector.x;
+			temp.y += movementVector.y;
+			
+			global.mainCanvasHandler.drawDebugLine([newPath.segments[i].point,temp], 'red');
+			
+			// if odd, make the vector all negative so we move down
+			if(i % 2 == 1){
+				//movementVector.x = -movementVector.x;
+				//movementVector.y = -movementVector.y;
+			} 
+			
+			//console.log("final movement vector ", movementVector);
+			
+			newPath.segments[i].point.x += 20*movementVector.x;//value * movementVector.x;
+			newPath.segments[i].point.y += 20*movementVector.y;//value * movementVector.y;
 		} else {
-			newPath.segments[i].point.x -= value;
-			newPath.segments[i].point.y -= value;
+			//newPath.segments[i].point.x += value;
+			//newPath.segments[i].point.y += value;
 		}
 		//console.log("noise values for i ", i, xvalue, yvalue);
+		//console.log("new point", newPath.segments[i].point);
 		
 	}
 	return newPath;
@@ -340,6 +368,42 @@ DesignGenerator.prototype.testAbsNoiseDesign = function(pointsDensity){
 //////////////////////////////////////////////////////////////////////////////
 //////////////// RELATIVE... /////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
+
+DesignGenerator.prototype.getRelPerpVector = function(prevPoint, point, nextPoint){
+	
+	var vect = this.getRelTangentVector(prevPoint, point, nextPoint).rotate(90);
+
+	return vect;
+	
+};
+
+DesignGenerator.prototype.getRelTangentVector = function(prevPoint, point, nextPoint){
+	var prevVector = new Point(prevPoint.x - point.x, prevPoint.y - point.y);
+	var nextVector = new Point(point.x - nextPoint.x, point.y - nextPoint.y);
+	
+	//global.mainCanvasHandler.drawDebugLine([point,prevPoint], 'red');
+	//global.mainCanvasHandler.drawDebugLine([point,nextPoint], 'blue');
+	
+	prevVector = prevVector.normalize();
+	nextVector = nextVector.normalize();
+	
+	var avgInverse = new Point((prevVector.x + nextVector.x)/2, (prevVector.y + nextVector.y)/2);
+	avgInverse = avgInverse.normalize();
+	
+	if(avgInverse.x == 0 && avgInverse.y == 0){
+		avgInverse.x = prevVector.y;
+		avgInverse.y = prevVector.x;
+	} 
+	//console.log("normal with value adjustment", avgInverse);
+	
+	var temp = new Point((avgInverse.x * 20) + point.x, (avgInverse.y * 20) + point.y);
+	
+	global.mainCanvasHandler.drawDebugLine([point,temp], 'black');
+	
+	return avgInverse;
+};
+
+
 
 DesignGenerator.prototype.testRelativeDesign = function(){
 	//this.generatePathPoints(this.flattenedPath); // Resets this.pathPoints to the recentPath.
