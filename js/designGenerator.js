@@ -42,7 +42,7 @@ DesignGenerator.prototype.generate = function(params){
 // Input: params:{
 //		path:   	 
 //		type: (toolLibrary names) 	 
-//		noiseSettings: (num_iterations, persistence, freq, low, high) // there are defaults for all of these  	 
+//		generationSettings: (num_iterations, persistence, freq, low, high) // there are defaults for all of these  	 
 //		path:  	 
 //		path:  	 
 //		path:  	 
@@ -64,6 +64,7 @@ DesignGenerator.prototype.parseToolParams =  function(params){
 	// and come back with the appropriate path(s)
 	// ... unless this causes a problem
 	var newPath = null;
+	//console.log("Calling parseToolParams with what params? ", params);
 	
 	try{
 	
@@ -83,15 +84,15 @@ DesignGenerator.prototype.parseToolParams =  function(params){
 		    //    
 		    //    break;
 		    case "sketchNoise":
-		        newPath = this.applyNoiseToPath(params.path, this.fetchDefaultToolNoiseSettings(params.type));
+		        newPath = this.applyNoiseToPath(params.path, this.gatherGenerationParams(params.generationSettings, params.type));
 		        
 		        break;
 		    case "sketchHighNoise":
-		    	newPath = this.apply1DNoiseToPath(params.path, this.fetchDefaultToolNoiseSettings(params.type));
+		    	newPath = this.apply1DNoiseToPath(params.path, this.gatherGenerationParams(params.generationSettings, params.type));
 		        
 		        break;
 		    case "graffitiNoise":
-		    	newPath = this.applyNoiseToPath(params.path, this.fetchDefaultToolNoiseSettings(params.type));
+		    	newPath = this.applyNoiseToPath(params.path, this.gatherGenerationParams(params.generationSettings, params.type));
 		        
 		        break;
 		    case "swingNoise":
@@ -125,9 +126,6 @@ DesignGenerator.prototype.parseToolParams =  function(params){
 	return newPath;
 };
 
-DesignGenerator.prototype.fetchDefaultToolNoiseSettings = function(type){
-	return global.toolLibrary[type].noiseSettings;
-};
 
 ////////////////////////////////////////////////////////////////////////
 /////// HELPER FUNCTIONS //////////////////////////////////////////////
@@ -183,7 +181,7 @@ DesignGenerator.prototype.applyAngle = function(originPath, generatedPath, radiu
 ////////////////////////////////////////////////////////////////////////
 
 /*
- * this.defaultNoiseSettings = {
+ * params = {
 		num_iterations: 5, 
 		persistence: .7,
 		freq: .007, 
@@ -191,48 +189,80 @@ DesignGenerator.prototype.applyAngle = function(originPath, generatedPath, radiu
 		high: 1,
 	}
  */
+// Holds all potentially useful params for generation and sets them to their appropriate values
+// They are set to (in order of least to most important):
+//				null, if there are no params at all
+//				tool's default, if tool is defined
+//				params value, if they are defined in params. This could still be null 
+
+DesignGenerator.prototype.gatherGenerationParams = function(params, toolName){
+	//console.log("Calling gatherGenerationParams with ", params, toolName);
+	// Step 1, set everything to null as a backup
+	var finalParams = {
+		num_iterations: null,
+		persistence: null,
+		freq: null,
+		low: null,
+		high: null,
+		angle: null,
+	};
+
+	// Step 2, override null with tool's default
+	if(toolName !== undefined && toolName !== null && 
+		global.toolLibrary[toolName] !== undefined && global.toolLibrary[toolName] !== null){
+			var toolSettings = global.toolLibrary[toolName].generationSettings;
+			for (var key in toolSettings) {
+			    // skip loop if the property is from prototype
+			    if (!toolSettings.hasOwnProperty(key)) continue;
+			    finalParams[key] = toolSettings[key];
+			    //console.log("Setting param from tool", key, finalParams[key]);
+			}
+	}
+	
+	// Step 3, override default tool with any specific params sent
+	if(params !== undefined && params !== null){
+		for (var key in params) {
+		    // skip loop if the property is from prototype
+		    if (!params.hasOwnProperty(key)) continue;
+		    // So we don't accidentally overwrite any tool default with param null
+		    // !!! THIS CAN CAUSE SOME WEIRD BEHAVIORS POSSIBLY? 
+		    // Using defaults silently may cause issues?
+		    if(params[key] !== null){
+		    	finalParams[key] = params[key];
+		    	//console.log("Setting param from params", key, finalParams[key]);
+		    }
+		}
+	}
+	
+	return finalParams;
+};
 
 
 // TODO: noise.seed(Math.random()); for the generator's appropriate seed
-// TODO: Neatly compine the overlapping code with noise1D version
+// TODO: Neatly compine the overlapping code with noise1D versionW
+
+// params should have already been run though gatherGenerationParams
 DesignGenerator.prototype.applyNoiseToPath = function(path, params){
-	var iterations = null;
-	var persistence = null;
-	var freq = null;
-	var low = null;
-	var high = null;
+	var paramList = ["num_iterations", "persistence", "freq", "low", "high"];
 	
-	if(params !== undefined && params !== null){
-		//console.log("NoiseToPath using some new settings", params);
-		
-		if(params.num_iterations !== undefined && params.num_iterations !== null){
-			iterations = params.num_iterations;
-		}
-		if(params.persistence !== undefined && params.persistence !== null){
-			persistence = params.persistence;
-		}
-		if(params.freq !== undefined && params.freq !== null){
-			freq = params.freq;
-		}
-		if(params.low !== undefined && params.low !== null){
-			low = params.low;
-		}
-		if(params.high !== undefined && params.high !== null){
-			high = params.high;
-		}
-	} else {
-		console.log("NoiseToPath using default noise settings", this.defaultNoiseSettings);
-		iterations = this.defaultNoiseSettings.num_iterations;
-		persistence = this.defaultNoiseSettings.persistence;
-		freq = this.defaultNoiseSettings.freq;
-		low = this.defaultNoiseSettings.low;
-		high = this.defaultNoiseSettings.high;
+	// BEWARE TYPOS WHENEVER USING checkParamKeysNotNull in this way
+	if(global.checkParamKeysNotNull(paramList, params) == false){
+		console.log("!!!! Potential problem with applyNoiseToPath, params may have a null value we need to not be null", params);
+		return;
 	}
+	
+	var num_iterations = params.num_iterations;
+	var persistence = params.persistence;
+	var freq = params.freq;
+	var low = params.low;
+	var high = params.high;
+	
+	
 	// TODO: noise.seed(Math.random()); for the generator's appropriate seed
 	var newPath = path.clone();
 	for(var i = 0; i < newPath.segments.length; i++){
-		var xvalue = this.sumOcatave(iterations, newPath.segments[i].point.x, newPath.segments[i].point.y, persistence, freq, low, high);
-		var yvalue = this.sumOcatave(iterations, xvalue, newPath.segments[i].point.y/2, persistence, freq, low, high);
+		var xvalue = this.sumOcatave(num_iterations, newPath.segments[i].point.x, newPath.segments[i].point.y, persistence, freq, low, high);
+		var yvalue = this.sumOcatave(num_iterations, xvalue, newPath.segments[i].point.y/2, persistence, freq, low, high);
 		
 		//console.log("noise values for i ", i, xvalue, yvalue);
 		newPath.segments[i].point.x += xvalue;
@@ -282,42 +312,23 @@ DesignGenerator.prototype.sumOcataveUnscaled = function(num_iterations, x, y, pe
 };
 // TODO: Neatly compine the overlapping code with regular noise version
 DesignGenerator.prototype.apply1DNoiseToPath = function(path, params){
-	var iterations = null;
-	var persistence = null;
-	var freq = null;
-	var low = null;
-	var high = null;
+	var paramList = ["num_iterations", "persistence", "freq", "low", "high"];
 	
-	if(params !== undefined && params !== null){
-		//console.log("NoiseToPath using some new settings", params);
-		
-		if(params.num_iterations !== undefined && params.num_iterations !== null){
-			iterations = params.num_iterations;
-		}
-		if(params.persistence !== undefined && params.persistence !== null){
-			persistence = params.persistence;
-		}
-		if(params.freq !== undefined && params.freq !== null){
-			freq = params.freq;
-		}
-		if(params.low !== undefined && params.low !== null){
-			low = params.low;
-		}
-		if(params.high !== undefined && params.high !== null){
-			high = params.high;
-		}
-	} else {
-		console.log("NoiseToPath using default noise settings", this.defaultNoiseSettings);
-		iterations = this.defaultNoiseSettings.num_iterations;
-		persistence = this.defaultNoiseSettings.persistence;
-		freq = this.defaultNoiseSettings.freq;
-		low = this.defaultNoiseSettings.low;
-		high = this.defaultNoiseSettings.high;
+	// BEWARE TYPOS WHENEVER USING checkParamKeysNotNull in this way
+	if(global.checkParamKeysNotNull(paramList, params) == false){
+		console.log("!!!! Potential problem with applyNoiseToPath, params may have a null value we need to not be null", params);
+		return;
 	}
+	
+	var num_iterations = params.num_iterations;
+	var persistence = params.persistence;
+	var freq = params.freq;
+	var low = params.low;
+	var high = params.high;
 	
 	var newPath = path.clone();
 	for(var i = 0; i < newPath.segments.length; i++){
-		var value = this.sumOcataveUnscaled(iterations, newPath.segments[i].point.x/10, newPath.segments[i].point.y/10, persistence, freq);
+		var value = this.sumOcataveUnscaled(num_iterations, newPath.segments[i].point.x/10, newPath.segments[i].point.y/10, persistence, freq);
 		//value = value * (Math.abs(high) + Math.abs(low));
 		value = Math.abs(value * (high - low)/2);
 		

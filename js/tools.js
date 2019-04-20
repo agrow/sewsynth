@@ -1,6 +1,6 @@
 
 
-var CustomTool = function(name, type, drawingSettings, noiseSettings){
+var CustomTool = function(name, type, drawingSettings, generationSettings){
 	
 	this.name = name;
 	this.type = type;
@@ -18,7 +18,7 @@ var CustomTool = function(name, type, drawingSettings, noiseSettings){
 	// TODO: Design settings -- how many paths?
 	
 	// TODO: Design Path & Generation Settings for each path
-	this.noiseSettings = noiseSettings;
+	this.generationSettings = generationSettings;
 	
 	// TODO: Name of graphical file to display as the icon
 	
@@ -150,7 +150,7 @@ var toolLibrary = {
 		{
 			strokeColor:'red'
 		},
-		// "noiseSettings"
+		// "generationSettings"
 		{
 			num_iterations: 1, 
 			persistence: .5,
@@ -170,7 +170,7 @@ var toolLibrary = {
 		{
 			strokeColor:'green'
 		},
-		// "noiseSettings"
+		// "generationSettings"
 		{
 			num_iterations: 7, 
 			persistence: .5,
@@ -190,7 +190,7 @@ var toolLibrary = {
 		{
 			strokeColor:'blue'
 		},
-		// "noiseSettings"
+		// "generationSettings"
 		{
 			num_iterations: 1, 
 			persistence: .5,
@@ -273,6 +273,6 @@ var toolLibrary = {
 		// Design settings needs 2 paths
 		// Generation settings need density
 	),
-};
+}; global.toolLibrary = toolLibrary;
 
 

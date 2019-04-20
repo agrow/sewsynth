@@ -1,30 +1,4 @@
-var global = {
-	mainErrorHandler: null,
-	mainHistoryHandler: null,
-	mainCanvasHandler: null,
-	mainDesignHandler: null,
-	mainDesignGenerator: null,
-	toolLibrary: toolLibrary, // this is defined in tools.js
-	selectedTool: "plainLine",
-	
-	calcHeight: 0,
-	calcWidth: 0,
-	designCount: 0,
-	pointCount: 0,
-	actionCount: 0,
-	
-	
-	// GUIelements, not necessary to put them here, but helpful to know what's up
-	design_options: {visible: false},
-	view_options: {visible: false},
-	image_options: {visible: false},
-	
-	keyMap: {},
-	keyEventFired: {},
-	// TODO: if drawing a path, lock commands such as keyboard UNDO
-	inputLock: false, // if true, undo/UI commands should not be executed
-	inputsLockedBy: null // a string describing input locker & why
-};
+
 
 if (!window.FileReader) {
     message = '<p>The ' +
@@ -213,7 +187,7 @@ $( document ).ready(function() {
 		
 		console.log( "ready!" );
 	} catch (e){
-		alert("catastrophic failure -- initialization failed");
+		global.mainErrorHandler.displayError("catastrophic failure -- initialization failed", e);
 	}
 	
 });
