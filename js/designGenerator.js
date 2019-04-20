@@ -191,6 +191,8 @@ DesignGenerator.prototype.applyAngle = function(originPath, generatedPath, radiu
 		high: 1,
 	}
  */
+
+
 // TODO: noise.seed(Math.random()); for the generator's appropriate seed
 // TODO: Neatly compine the overlapping code with noise1D version
 DesignGenerator.prototype.applyNoiseToPath = function(path, params){
@@ -316,34 +318,35 @@ DesignGenerator.prototype.apply1DNoiseToPath = function(path, params){
 	var newPath = path.clone();
 	for(var i = 0; i < newPath.segments.length; i++){
 		var value = this.sumOcataveUnscaled(iterations, newPath.segments[i].point.x/10, newPath.segments[i].point.y/10, persistence, freq);
-		value = value * (Math.abs(high) + Math.abs(low));
+		//value = value * (Math.abs(high) + Math.abs(low));
+		value = Math.abs(value * (high - low)/2);
 		
 		// If we are not the endpoints, find the tangent between
 		// the last and next points
 		var movementVector = null;
 		if(i > 0 && i < newPath.segments.length-1){
 			//movementVector = this.getRelTangentVector(path.segments[i-1].point, path.segments[i].point, path.segments[i+1].point);
-			movementVector = this.getRelPerpVector(path.segments[i-1].point, path.segments[i].point, path.segments[i+1].point);
+			movementVector = this.getRelVectorWithAngle(path.segments[i-1].point, path.segments[i].point, path.segments[i+1].point, 90);
 			
-			// if even, make the vector all positive so we move up
-			//movementVector.x = Math.abs(movementVector.x);
-			//movementVector.y = Math.abs(movementVector.y);
-			var temp = newPath.segments[i].point.clone();
-			temp.x += movementVector.x;
-			temp.y += movementVector.y;
-			
-			global.mainCanvasHandler.drawDebugLine([newPath.segments[i].point,temp], 'red');
 			
 			// if odd, make the vector all negative so we move down
 			if(i % 2 == 1){
 				//movementVector.x = -movementVector.x;
 				//movementVector.y = -movementVector.y;
+				movementVector = movementVector.rotate(180);
 			} 
+			
+			//var temp = newPath.segments[i].point.clone();
+			//temp.x += 20*movementVector.x;
+			//temp.y += 20*movementVector.y;
+			
+			//global.mainCanvasHandler.drawDebugLine([newPath.segments[i].point,temp], 'red');
+			//console.log("scale value on vector", movementVector, value);
 			
 			//console.log("final movement vector ", movementVector);
 			
-			newPath.segments[i].point.x += 20*movementVector.x;//value * movementVector.x;
-			newPath.segments[i].point.y += 20*movementVector.y;//value * movementVector.y;
+			newPath.segments[i].point.x += value*movementVector.x;//20 * movementVector.x;
+			newPath.segments[i].point.y += value*movementVector.y;//20 * movementVector.y;
 		} else {
 			//newPath.segments[i].point.x += value;
 			//newPath.segments[i].point.y += value;
@@ -358,20 +361,25 @@ DesignGenerator.prototype.apply1DNoiseToPath = function(path, params){
 
 ////////////////////////////////////////////////////////////////////////
 
-
-DesignGenerator.prototype.testAbsNoiseDesign = function(pointsDensity){
-	
+DesignGenerator.prototype.bounceBetweenPaths = function(path1, path2){
+	var path = new Path();
+	for(var i = 0; i < path1.segments.length; i++){
+		path.add(path1.segments[i].point.clone());
+		if(i < path2.segments.length){
+			path.add(path2.segments[i].point.clone());
+		}
+	}
+	return path;
 };
-
 
 
 //////////////////////////////////////////////////////////////////////////////
 //////////////// RELATIVE... /////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-DesignGenerator.prototype.getRelPerpVector = function(prevPoint, point, nextPoint){
+DesignGenerator.prototype.getRelVectorWithAngle = function(prevPoint, point, nextPoint, angle){
 	
-	var vect = this.getRelTangentVector(prevPoint, point, nextPoint).rotate(90);
+	var vect = this.getRelTangentVector(prevPoint, point, nextPoint).rotate(angle);
 
 	return vect;
 	
@@ -396,9 +404,9 @@ DesignGenerator.prototype.getRelTangentVector = function(prevPoint, point, nextP
 	} 
 	//console.log("normal with value adjustment", avgInverse);
 	
-	var temp = new Point((avgInverse.x * 20) + point.x, (avgInverse.y * 20) + point.y);
+	//var temp = new Point((avgInverse.x * 20) + point.x, (avgInverse.y * 20) + point.y);
 	
-	global.mainCanvasHandler.drawDebugLine([point,temp], 'black');
+	//global.mainCanvasHandler.drawDebugLine([point,temp], 'black');
 	
 	return avgInverse;
 };
