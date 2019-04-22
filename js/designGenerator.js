@@ -108,7 +108,7 @@ DesignGenerator.prototype.parseToolParams =  function(params){
 		        
 		        break;
 		    case "echoTangent":
-		        
+		        newPath = this.echoPathWithAngle(params.path, this.gatherGenerationParams(params.generationSettings, params.type));
 		        break;
 		    case "plainSatin":
 		        
@@ -384,7 +384,7 @@ DesignGenerator.prototype.applyNoiseToPathTwice = function(path, params){
 	
 	// BEWARE TYPOS WHENEVER USING checkParamKeysNotNull in this way
 	if(global.checkParamKeysNotNull(paramList, params) == false){
-		console.log("!!!! Potential problem with applyNoiseToPath, params may have a null value we need to not be null", params);
+		console.log("!!!! Potential problem with applyNoiseToPathTwice, params may have a null value we need to not be null", params);
 		return;
 	}
 	
@@ -446,8 +446,59 @@ DesignGenerator.prototype.applyNoiseToPathTwice = function(path, params){
 	
 };
 
+// A key part of echoTangent, also for any side-by-side compound paths
+DesignGenerator.prototype.echoPathWithAngle = function(path, params){
+	var paramList = ["angle", "high"];
+	
+	// BEWARE TYPOS WHENEVER USING checkParamKeysNotNull in this way
+	if(global.checkParamKeysNotNull(paramList, params) == false){
+		console.log("!!!! Potential problem with echoPathWithAngle, params may have a null value we need to not be null", params);
+		return;
+	}
+	
+	var angle = params.angle;
+	var high = params.high;
+	
+	var newPath = path.clone();
+	var movementVector = null;
+	
+	for(var i = 0; i < newPath.segments.length; i++){
+		//console.log("IIIIIIIIIIII", i, (i > 0), (i < newPath.segments.length-1));
+		if(i > 0 && i < newPath.segments.length-1){
+			movementVector = this.getRelVectorWithAngle(path.segments[i-1].point, path.segments[i].point, path.segments[i+1].point, angle);
+			//console.log("should have gotten movement vector at i", i, movementVector);
+			
+			newPath.segments[i].point.x += high*movementVector.x;//20 * movementVector.x;
+			newPath.segments[i].point.y += high*movementVector.y;//20 * movementVector.y;
+		} else {
+			
+		}
+		//console.log("What is the movement vector? and i", i, movementVector);
+		
+		// We don't want the first point to just be at the start of the base line
+		// so fudge copying the first calculation's angle for point 2 as point 1 as well
+		
+		// Handles the start point
+		if(i == 2){
+			// if length ==3, and we are on 2, since we don't have a fresh movement vector we use the last one without error'
+			newPath.segments[0].point.x += high*movementVector.x;//20 * movementVector.x;
+			newPath.segments[0].point.y += high*movementVector.y;//20 * movementVector.y;
+		}
+		
+		// Handles the endpoint
+		if(newPath.segments.length > 2 && i == newPath.segments.length-1){
+			newPath.segments[i].point.x += high*movementVector.x;//20 * movementVector.x;
+			newPath.segments[i].point.y += high*movementVector.y;//20 * movementVector.y;
+		}
+		
+		//if(newPath.segments.length >= 3)
+	}
+	return newPath;
+};
+
 ////////////////////////////////////////////////////////////////////////
 
+// TODO: UNTESTED
 DesignGenerator.prototype.bounceBetweenPaths = function(path1, path2){
 	var path = new Path();
 	for(var i = 0; i < path1.segments.length; i++){

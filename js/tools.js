@@ -272,6 +272,11 @@ var toolLibrary = {
 		// Drawing settings for the line. These override the defaults
 		{
 			strokeColor:'cyan'
+		},
+		// "generationSettings"
+		{
+			angle: 90,
+			high: 40
 		}
 		// canvas handler tool needs min
 		// Design settings needs 1 path
