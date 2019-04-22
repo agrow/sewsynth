@@ -209,6 +209,25 @@ var toolLibrary = {
 		// Drawing settings for the line. These override the defaults
 		{
 			strokeColor:'orange'
+		},
+		// "generationSettings"
+		{
+			// keeping these the same for ease's sake
+			num_iterations: 7, 
+			persistence: .5,
+			freq: .5, 
+			// normal noise is 0-1, remember this is pixels
+			// 10 gives us at least a solid number. with a distance away from the original point 
+			low: -30, 
+			high: 30,
+			// Noise setting 2
+			freq2: .05, 
+			// normal noise is 0-1, remember this is pixels
+			// 10 gives us at least a solid number. with a distance away from the original point 
+			low2: -10, 
+			high2: 10,
+			// how many points between swapping between noise setting 1 and 2
+			swapRate:10
 		}
 		// canvas handler tool needs min & small max lines
 		// Design settings needs 1 path

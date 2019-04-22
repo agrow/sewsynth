@@ -96,7 +96,7 @@ DesignGenerator.prototype.parseToolParams =  function(params){
 		        
 		        break;
 		    case "swingNoise":
-		        
+		        newPath = this.applyNoiseToPathTwice(params.path, this.gatherGenerationParams(params.generationSettings, params.type));
 		        break;
 		    case "speedyDrawing":
 		        
@@ -204,6 +204,10 @@ DesignGenerator.prototype.gatherGenerationParams = function(params, toolName){
 		freq: null,
 		low: null,
 		high: null,
+		freq2: null,
+		low2: null,
+		high2: null,
+		swapRate: null,
 		angle: null,
 	};
 
@@ -238,40 +242,7 @@ DesignGenerator.prototype.gatherGenerationParams = function(params, toolName){
 };
 
 
-// TODO: noise.seed(Math.random()); for the generator's appropriate seed
-// TODO: Neatly compine the overlapping code with noise1D versionW
 
-// params should have already been run though gatherGenerationParams
-DesignGenerator.prototype.applyNoiseToPath = function(path, params){
-	var paramList = ["num_iterations", "persistence", "freq", "low", "high"];
-	
-	// BEWARE TYPOS WHENEVER USING checkParamKeysNotNull in this way
-	if(global.checkParamKeysNotNull(paramList, params) == false){
-		console.log("!!!! Potential problem with applyNoiseToPath, params may have a null value we need to not be null", params);
-		return;
-	}
-	
-	var num_iterations = params.num_iterations;
-	var persistence = params.persistence;
-	var freq = params.freq;
-	var low = params.low;
-	var high = params.high;
-	
-	
-	// TODO: noise.seed(Math.random()); for the generator's appropriate seed
-	var newPath = path.clone();
-	for(var i = 0; i < newPath.segments.length; i++){
-		var xvalue = this.sumOcatave(num_iterations, newPath.segments[i].point.x, newPath.segments[i].point.y, persistence, freq, low, high);
-		var yvalue = this.sumOcatave(num_iterations, xvalue, newPath.segments[i].point.y/2, persistence, freq, low, high);
-		
-		//console.log("noise values for i ", i, xvalue, yvalue);
-		newPath.segments[i].point.x += xvalue;
-		
-		newPath.segments[i].point.y += yvalue;
-	}
-	return newPath;
-	
-};
 
 // num_iterations is how many ocataves of noise we average
 // x and y are the locations
@@ -310,6 +281,43 @@ DesignGenerator.prototype.sumOcataveUnscaled = function(num_iterations, x, y, pe
 	return noiseVal;
 	
 };
+
+// TODO: noise.seed(Math.random()); for the generator's appropriate seed
+// TODO: Neatly compine the overlapping code with noise1D versionW
+
+// params should have already been run though gatherGenerationParams
+DesignGenerator.prototype.applyNoiseToPath = function(path, params){
+	var paramList = ["num_iterations", "persistence", "freq", "low", "high"];
+	
+	// BEWARE TYPOS WHENEVER USING checkParamKeysNotNull in this way
+	if(global.checkParamKeysNotNull(paramList, params) == false){
+		console.log("!!!! Potential problem with applyNoiseToPath, params may have a null value we need to not be null", params);
+		return;
+	}
+	
+	var num_iterations = params.num_iterations;
+	var persistence = params.persistence;
+	var freq = params.freq;
+	var low = params.low;
+	var high = params.high;
+	
+	
+	// TODO: noise.seed(Math.random()); for the generator's appropriate seed
+	var newPath = path.clone();
+	for(var i = 0; i < newPath.segments.length; i++){
+		var xvalue = this.sumOcatave(num_iterations, newPath.segments[i].point.x, newPath.segments[i].point.y, persistence, freq, low, high);
+		var yvalue = this.sumOcatave(num_iterations, xvalue, newPath.segments[i].point.y/2, persistence, freq, low, high);
+		
+		//console.log("noise values for i ", i, xvalue, yvalue);
+		newPath.segments[i].point.x += xvalue;
+		
+		newPath.segments[i].point.y += yvalue;
+	}
+	return newPath;
+	
+};
+
+
 // TODO: Neatly compine the overlapping code with regular noise version
 DesignGenerator.prototype.apply1DNoiseToPath = function(path, params){
 	var paramList = ["num_iterations", "persistence", "freq", "low", "high"];
@@ -365,6 +373,74 @@ DesignGenerator.prototype.apply1DNoiseToPath = function(path, params){
 		//console.log("noise values for i ", i, xvalue, yvalue);
 		//console.log("new point", newPath.segments[i].point);
 		
+	}
+	return newPath;
+	
+};
+
+// Applies two sets of noise at different parts of the length
+DesignGenerator.prototype.applyNoiseToPathTwice = function(path, params){
+	var paramList = ["num_iterations", "persistence", "freq", "low", "high", "freq2", "low2", "high2", "swapRate"];
+	
+	// BEWARE TYPOS WHENEVER USING checkParamKeysNotNull in this way
+	if(global.checkParamKeysNotNull(paramList, params) == false){
+		console.log("!!!! Potential problem with applyNoiseToPath, params may have a null value we need to not be null", params);
+		return;
+	}
+	
+	var num_iterations = params.num_iterations;
+	var persistence = params.persistence;
+	var freq = params.freq;
+	var low = params.low;
+	var high = params.high;
+	var freq2 = params.freq2;
+	var low2 = params.low2;
+	var high2 = params.high2;
+	var swapRate = params.swapRate;
+	// flip the value every time we go through the swap rate
+	var useFirstSet = true;
+	
+	var newPath = path.clone();
+	for(var i = 0; i < newPath.segments.length; i++){
+		if(swapRate == 0){
+			useFirstSet = !useFirstSet;
+			swapRate = params.swapRate;
+		}
+		
+		if(useFirstSet == true){
+			var xvalue = this.sumOcatave(num_iterations, newPath.segments[i].point.x, newPath.segments[i].point.y, persistence, freq2, low2, high2);
+			var yvalue = this.sumOcatave(num_iterations, xvalue, newPath.segments[i].point.y/2, persistence, freq2, low2, high2);
+			
+			//console.log("noise values for i, 2D ", i, xvalue, yvalue);
+			newPath.segments[i].point.x += xvalue;
+			newPath.segments[i].point.y += yvalue;
+		} else {
+				
+			var value = this.sumOcataveUnscaled(num_iterations, newPath.segments[i].point.x/10, newPath.segments[i].point.y/10, persistence, freq);
+			//value = value * (Math.abs(high) + Math.abs(low));
+			value = Math.abs(value * (high - low)/2);
+			//console.log("noise values for i, 1D ", i, value);
+			
+			// If we are not the endpoints, find the tangent between
+			// the last and next points
+			var movementVector = null;
+			if(i > 0 && i < newPath.segments.length-1){
+				//movementVector = this.getRelTangentVector(path.segments[i-1].point, path.segments[i].point, path.segments[i+1].point);
+				movementVector = this.getRelVectorWithAngle(path.segments[i-1].point, path.segments[i].point, path.segments[i+1].point, 90);
+				
+				// if odd, make the vector all negative so we move down
+				if(i % 2 == 1){
+					movementVector = movementVector.rotate(180);
+				} 
+				
+				newPath.segments[i].point.x += value*movementVector.x;//20 * movementVector.x;
+				newPath.segments[i].point.y += value*movementVector.y;//20 * movementVector.y;
+			} else {
+			}
+		}
+		
+
+		swapRate --;
 	}
 	return newPath;
 	
