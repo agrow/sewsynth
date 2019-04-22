@@ -105,7 +105,7 @@ DesignGenerator.prototype.parseToolParams =  function(params){
 		        
 		        break;
 		    case "echoExact":
-		        
+		        newPath = this.echoPathExactWithAngle(params.path, this.gatherGenerationParams(params.generationSettings, params.type));
 		        break;
 		    case "echoTangent":
 		        newPath = this.echoPathWithAngle(params.path, this.gatherGenerationParams(params.generationSettings, params.type));
@@ -492,6 +492,32 @@ DesignGenerator.prototype.echoPathWithAngle = function(path, params){
 		}
 		
 		//if(newPath.segments.length >= 3)
+	}
+	return newPath;
+};
+
+DesignGenerator.prototype.echoPathExactWithAngle = function(path, params){
+	var paramList = ["angle", "high"];
+	
+	// BEWARE TYPOS WHENEVER USING checkParamKeysNotNull in this way
+	if(global.checkParamKeysNotNull(paramList, params) == false){
+		console.log("!!!! Potential problem with echoPathWithAngle, params may have a null value we need to not be null", params);
+		return;
+	}
+	
+	var angle = params.angle;
+	var high = params.high;
+	
+	var newPath = path.clone();
+	var movementVector = new Point(1, 0);
+	movementVector = movementVector.rotate(angle);
+	movementVector = movementVector.normalize();
+	
+	// Just move everything by the scaled movement vector
+	for(var i = 0; i < newPath.segments.length; i++){
+		newPath.segments[i].point.x += high*movementVector.x;//20 * movementVector.x;
+		newPath.segments[i].point.y += high*movementVector.y;//20 * movementVector.y;
+		
 	}
 	return newPath;
 };
