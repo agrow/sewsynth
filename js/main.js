@@ -52,8 +52,9 @@ var initNoise = function(seed){
 var initKeys = function() {
 	global.keyMap[17] = false;
 	global.keyMap[90] = false;
-	global.keyMap[16] = false;
-	global.keyMap[88] = false;
+	//global.keyMap[16] = false;
+	//global.keyMap[88] = false;
+	global.keyMap[89] = false;
 	
 	global.keyEventFired.undo = false;
 	global.keyEventFired.redo = false;
@@ -77,13 +78,21 @@ window.onkeyup = function(e) {
 	}
 	// REDO
 	// code 17 = ctrl
+	// code 89 = y
+	if(global.keyMap[17] == false || global.keyMap[89] == false){
+		global.keyEventFired.redo = false;
+		//console.log("Setting undo fire to false");
+	}
+	
+	/*
+	// code 17 = ctrl
 	// code 16 = shift
 	// code 88 = x
 	if(global.keyMap[17] == false || global.keyMap[16] == false ||
 		global.keyMap[88] == false){
 		global.keyEventFired.redo = false;
 		//console.log("Setting redo fire to false");
-	}
+	}*/
 };
 
 window.onkeydown = function(e) {
@@ -108,6 +117,17 @@ window.onkeydown = function(e) {
 			
 		// REDO
 		// code 17 = ctrl
+		// code 89 = y
+		if(global.keyMap[17] == true && global.keyMap[89] == true &&
+			global.keyEventFired.redo == false){
+				// trigger undo
+				global.mainHistoryHandler.doRedo();
+				console.log("REdooo");
+				global.keyEventFired.redo = true;
+		}
+		
+		/*
+		// code 17 = ctrl
 		// code 16 = shift
 		// code 88 = x
 		if(global.keyMap[17] == true && global.keyMap[16] == true &&
@@ -116,7 +136,7 @@ window.onkeydown = function(e) {
 				global.mainHistoryHandler.doRedo();
 				console.log("REdooo");
 				global.keyEventFired.redo = true;
-		}
+		}*/
 	}
 };
 
