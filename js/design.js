@@ -46,6 +46,8 @@ Design.prototype.deactivate = function(){
 // post: loaded showAndSelectPath, which was set last time visibility settings were used
 Design.prototype.reactivate = function(){
 	if(this.active == false){
+		console.log("reactivating from design.js, what are our last selected params?", this.lastSelectedParams);
+		
 		for(var i = 0; i < this.paths.length; i++){
 			this.paths[i].reactivate();
 		}

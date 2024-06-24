@@ -331,6 +331,7 @@ DesignPath.prototype.calcSewnPath = function(path){
 // Accepts new path from active drawing. Need to redraw all now-dirty paths
 DesignPath.prototype.acceptNewJSPath = function(path){
 	this.paperPath = path;
+	this.paperPath.dashArray = [2, 4];
 	this.setAllPathsDirty();
 };
 
@@ -426,12 +427,25 @@ DesignPath.prototype.deactivate = function(){
 	this.active = false;
 	//this.setAllPathsDeselected();
 	//this.setAllPathsHidden();
+	if(this.paperPath !== null){
+		this.paperPath.visible = false;
+	}
+	if(this.derivitivePaths.generatedPath !== null){
+		this.derivitivePaths.generatedPath.visible = false;
+	}
 };
 
 // TODO: make a load function that uses those settings 
 DesignPath.prototype.reactivate = function(){
 	// load last settings
 	this.active = true;
+	// in place of loading last settings, let's just set stuff to visible
+	if(this.paperPath !== null){
+		this.paperPath.visible = true;
+	}
+	if(this.derivitivePaths.generatedPath !== null){
+		this.derivitivePaths.generatedPath.visible = true;
+	}
 	
 };
 
@@ -1011,6 +1025,7 @@ DesignPath.prototype.generatePath = function(params){
 	
 	// GENERATE IT
 	this.derivitivePaths.generatedPath = global.mainDesignGenerator.generate(parsedParams);
+	this.derivitivePaths.generatedPath.dashArray = [4,0];
 	
 	//console.log("Generated path", this.derivitivePaths.generatedPath);
 	// When we have the params nailed, make sure to check/save them
